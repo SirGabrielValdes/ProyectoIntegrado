@@ -1,0 +1,16 @@
+# /etc/systemd/system/sgr.service — servicio de la aplicación SGR
+[Unit]
+Description=SGR La Serena (gunicorn)
+After=network.target
+
+[Service]
+User=sgr
+Group=www-data
+WorkingDirectory=/opt/sgr/app
+EnvironmentFile=/opt/sgr/app/.env
+ExecStart=/opt/sgr/venv/bin/gunicorn sgr.wsgi:application -c /opt/sgr/app/deploy/gunicorn.conf.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
