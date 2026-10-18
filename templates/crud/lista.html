@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% load sgr %}
+{% block titulo %}{{ titulo }}{% endblock %}
+{% block migas %}<nav class="migas" aria-label="Ruta"><a href="{% url 'core:inicio' %}">Gestión municipal</a> / {{ m.nombre_modulo }}</nav>{% endblock %}
+{% block contenido %}
+<div class="encabezado">
+  <div>
+    <h1>{{ titulo }}</h1>
+    <p>{% if m.ayuda_lista %}{{ m.ayuda_lista }} {% endif %}Contexto: <strong>{{ delegacion_activa.codigo }} · {{ delegacion_activa.nombre }}</strong></p>
+  </div>
+  <div class="acciones-encabezado">
+    {% block acciones_encabezado %}
+    {% if puede_crear %}<a class="btn btn-primario" href="{% url modulo|add:':crear' %}">{% icono "mas" %}{{ nuevo_texto }}</a>{% endif %}
+    {% endblock %}
+  </div>
+</div>
+
+<section class="panel" aria-labelledby="titulo-listado">
+  <h2 id="titulo-listado" class="sr-only">Listado de {{ titulo|lower }}</h2>
+  <form class="barra" method="get" data-busqueda role="search">
+    <div class="busqueda">
+      <label for="q">Búsqueda inteligente</label>
+      <div class="con-icono">{% icono "lupa" %}
+        <input class="campo-input" type="search" id="q" name="q" value="{{ q }}" maxlength="100"
+               placeholder="{{ m.placeholder_busqueda }}" aria-describedby="ayuda-busqueda">
+      </div>
+      <span id="ayuda-busqueda" class="sr-only">Coincidencia parcial en varios campos, sin distinguir mayúsculas.</span>
+    </div>
+    {% for f in filtros %}{% if f.opciones %}
+      <div>
+        <label for="f-{{ f.nombre }}">{{ f.etiqueta }}</label>
+        <select class="campo-select" id="f-{{ f.nombre }}" name="{{ f.nombre }}">
+          {% if f.nombre == "ambito" %}{% else %}<option value="">Todos</option>{% endif %}
+          {% for valor, texto in f.opciones %}<option value="{{ valor }}" {% if f.valor == valor|stringformat:"s" %}selected{% endif %}>{{ texto }}</option>{% endfor %}
+        </select>
+      </div>
+    {% endif %}{% endfor %}
+    <button class="btn btn-neutro" type="submit">{% icono "lupa" "icono-sm" %}Buscar</button>
+    {% if filtrado %}<a class="btn btn-neutro" href="?">Limpiar</a>{% endif %}
+    {% if puede_exportar %}
+      <a class="btn btn-secundario" href="{% url modulo|add:':exportar' %}{% if parametros %}?{{ parametros }}{% endif %}"
+         data-exportar="Se exportarán {{ total }} registro(s) del filtro aplicado.">{% icono "excel" "icono-sm" %}Exportar a Excel</a>
+    {% endif %}
+  </form>
+
+  <p class="resumen-resultados" aria-live="polite">
+    {% if total %}Mostrando <strong>{{ pagina.start_index }}</strong> a <strong>{{ pagina.end_index }}</strong> de <strong>{{ total }}</strong> registro(s){% if filtrado %} que coinciden con el filtro{% endif %}.
+    {% else %}0 registros.{% endif %}
+  </p>
+
+  <div class="tabla-contenedor">
+    <div class="cargando-capa" role="status"><span class="spinner"></span>Cargando…</div>
+    {% if filas %}
+    <table class="tabla">
+      <thead><tr>{% for c in columnas %}<th scope="col">{{ c.titulo }}</th>{% endfor %}<th scope="col">Acciones</th></tr></thead>
+      <tbody>
+      {% for fila in filas %}
+        <tr>
+          {% for celda in fila.celdas %}
+            <td>{% if celda.tipo == "estado" %}{% estado celda.valor %}{% elif celda.tipo == "enlace" %}<a class="enlace-registro" href="{% url modulo|add:':detalle' fila.obj.pk %}">{{ celda.valor|valor }}</a>{% else %}{{ celda.valor|valor }}{% endif %}</td>
+          {% endfor %}
+          <td>{% include "crud/_acciones_fila.html" %}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% elif filtrado %}
+      <div class="vacio">{% icono "lupa" %}<strong>Sin coincidencias</strong>No hay registros que coincidan con «{{ q|default:"el filtro aplicado" }}». Pruebe con otro término o <a href="?">limpie los filtros</a>.</div>
+    {% elif not hay_registros %}
+      <div class="vacio">{% icono "documento" %}<strong>No hay registros</strong>Aún no se han creado {{ titulo|lower }}{% if puede_crear %}. Use «{{ nuevo_texto }}» para comenzar{% endif %}.</div>
+    {% endif %}
+  </div>
+
+  {% include "crud/_paginador.html" %}
+</section>
+{% endblock %}

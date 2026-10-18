@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% load sgr %}
+{% block titulo %}{{ titulo }}{% endblock %}
+{% block migas %}<nav class="migas" aria-label="Ruta"><a href="{% url 'core:inicio' %}">Gestión municipal</a> / {{ titulo }}</nav>{% endblock %}
+{% block contenido %}
+<div class="encabezado">
+  <div>
+    <h1>{{ titulo }} <span class="chip">Plantilla</span></h1>
+    <p>{{ descripcion }}</p>
+  </div>
+  <div class="acciones-encabezado">
+    <button class="btn btn-primario" type="button" data-pendiente>{% icono "mas" %}Nuevo registro</button>
+  </div>
+</div>
+<div class="alerta alerta-neutra" role="note">{% icono "info" %}
+  <span><strong>Módulo pendiente de Backend.</strong> Esta plantilla demuestra la navegación y la visualización según su rol.
+  Los datos son ficticios y las acciones no registran información (función <em>pendiente</em>, no simulada como exitosa).</span>
+</div>
+<section class="panel">
+  <div class="barra">
+    <div class="busqueda"><label for="q">Búsqueda inteligente</label>
+      <div class="con-icono">{% icono "lupa" %}<input class="campo-input" id="q" type="search" placeholder="Búsqueda disponible cuando el módulo esté integrado" disabled></div></div>
+    <button class="btn btn-secundario" type="button" data-pendiente>{% icono "excel" "icono-sm" %}Exportar a Excel</button>
+  </div>
+  <div class="tabla-contenedor">
+    <table class="tabla">
+      <thead><tr>{% for c in columnas %}<th scope="col">{{ c }}</th>{% endfor %}<th scope="col">Acciones</th></tr></thead>
+      <tbody>
+        {% for fila in filas %}<tr>{% for v in fila %}<td>{{ v }}</td>{% endfor %}<td><button class="enlace-accion neutro" type="button" data-pendiente>Ver</button></td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="pie-tabla"><span>Diseño referencial · Datos ficticios · Acciones sujetas al perfil</span></div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+document.querySelectorAll("[data-pendiente]").forEach(function (b) {
+  b.addEventListener("click", function () {
+    SGR.Alerta.fire({ icon: "info", title: "Función pendiente", text: "Este módulo se integrará en una próxima entrega. No se registró ninguna información." });
+  });
+});
+</script>
+{% endblock %}

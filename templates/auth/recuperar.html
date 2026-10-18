@@ -1,0 +1,16 @@
+{% extends "auth/base_auth.html" %}
+{% load sgr %}
+{% block titulo %}Recuperar contraseña{% endblock %}
+{% block contenido %}
+{% include "auth/_pasos.html" with paso=1 %}
+<h2>Recuperar contraseña</h2>
+<p class="subtitulo">Ingrese el correo asociado a su cuenta. Le enviaremos un código de verificación de 6 dígitos.</p>
+<form method="post" data-validar data-un-envio novalidate>
+  {% csrf_token %}
+  {% include "crud/_campo.html" with campo=form.correo %}
+  <button class="btn btn-primario btn-bloque" type="submit">{% icono "correo" "icono-sm" %}Enviar código</button>
+</form>
+<div class="enlaces-acceso">
+  <a href="{% url 'cuentas:login' %}">{% icono "volver" "icono-sm" %} Volver al inicio de sesión</a>
+</div>
+{% endblock %}

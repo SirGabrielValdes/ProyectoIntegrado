@@ -1,0 +1,9 @@
+{% extends "crud/detalle.html" %}
+{% load sgr %}
+{% block acciones_detalle %}
+  {% if puede.atenciones_crear %}<a class="btn btn-primario" href="{% url 'atenciones:crear' %}">{% icono "mas" "icono-sm" %}Ingresar otra atención</a>{% endif %}
+{% endblock %}
+{% block extra_detalle %}
+  <p class="registro-automatico" style="margin-top:14px">{% icono "candado" "icono-sm" %}
+    <span>Identificador de atención <strong>{{ obj.folio }}</strong>. La delegación, el responsable y la fecha se registraron automáticamente desde la sesión.</span></p>
+{% endblock %}

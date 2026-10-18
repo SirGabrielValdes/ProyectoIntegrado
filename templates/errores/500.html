@@ -1,0 +1,16 @@
+{% load static %}<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Error del servidor · SGR La Serena</title><link rel="stylesheet" href="{% static 'css/sgr.css' %}"></head>
+<body>
+<header class="cabecera"><a class="cabecera__marca" href="/"><img src="{% static 'img/logo-la-serena-blanco.png' %}" alt="Ilustre Municipalidad de La Serena"><span class="cabecera__sistema"><strong>SGR</strong><span>Sistema de Gestión de Requerimientos</span></span></a></header>
+<main class="contenido" style="max-width:640px;margin:40px auto">
+  <section class="panel">
+    <p class="chip chip-rojo">Error 500</p>
+    <h1>Error del servidor</h1>
+    <p>Ocurrió un error inesperado. La operación no se completó; intente nuevamente o contacte al administrador.</p>
+    <div class="botonera" style="justify-content:flex-start"><a class="btn btn-primario" href="/">Ir al inicio</a><a class="btn btn-neutro" href="javascript:history.back()">Volver</a></div>
+  </section>
+</main>
+<script src="{% static 'vendor/sweetalert2/sweetalert2.all.min.js' %}"></script>
+<script>Swal.fire({icon:"error",title:"Error del servidor",text:"Ocurrió un error inesperado. La operación no se completó; intente nuevamente o contacte al administrador.",confirmButtonColor:"#C41230",confirmButtonText:"Aceptar"});</script>
+</body></html>

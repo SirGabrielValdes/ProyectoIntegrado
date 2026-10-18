@@ -1,0 +1,15 @@
+{% extends "crud/form.html" %}
+{% block campos %}
+<div class="form-grilla">
+  {% include "crud/_campo.html" with campo=form.nombre %}
+  {% include "crud/_campo.html" with campo=form.username %}
+  {% include "crud/_campo.html" with campo=form.correo %}
+  {% include "crud/_campo.html" with campo=form.rol %}
+  {% include "crud/_campo.html" with campo=form.delegaciones %}
+  {% include "crud/_campo.html" with campo=form.clave1 %}
+  {% include "crud/_campo.html" with campo=form.clave2 %}
+  {% include "crud/_campo.html" with campo=form.is_active %}
+</div>
+<p class="ayuda">La contraseña debe tener entre 8 y 64 caracteres, con mayúscula, minúscula, número y carácter especial.
+  Solo se listan las delegaciones y roles que su perfil puede asignar.</p>
+{% endblock %}

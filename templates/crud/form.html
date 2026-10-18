@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% load sgr %}
+{% block titulo %}{% if creando %}{{ nuevo_texto }}{% else %}Editar {{ singular }}{% endif %}{% endblock %}
+{% block migas %}<nav class="migas" aria-label="Ruta"><a href="{% url 'core:inicio' %}">Gestión municipal</a> / <a href="{% url modulo|add:':lista' %}">{{ m.nombre_modulo }}</a> / {% if creando %}Nuevo{% else %}Editar{% endif %}</nav>{% endblock %}
+{% block contenido %}
+<div class="encabezado">
+  <div>
+    <h1>{% if creando %}{{ nuevo_texto }}{% else %}Editar {{ singular }}: {{ obj }}{% endif %}</h1>
+    <p>Contexto: <strong>{{ delegacion_activa.codigo }} · {{ delegacion_activa.nombre }}</strong></p>
+  </div>
+</div>
+<section class="panel">
+  <p class="nota-obligatorios">Los campos marcados con <span class="obligatorio">*</span> son obligatorios.</p>
+  {% for e in form.non_field_errors %}<div class="alerta" role="alert">{% icono "alerta" %}{{ e }}</div>{% endfor %}
+  <form method="post" data-proteger data-validar data-un-envio novalidate>
+    {% csrf_token %}
+    {% block campos %}
+    <div class="form-grilla">
+      {% for campo in form %}{% include "crud/_campo.html" %}{% endfor %}
+    </div>
+    {% endblock %}
+    <div class="botonera">
+      <a class="btn btn-neutro" data-cancelar href="{% if obj %}{% url modulo|add:':detalle' obj.pk %}{% else %}{% url modulo|add:':lista' %}{% endif %}">Cancelar</a>
+      <button class="btn btn-primario" type="submit">{% icono "check" "icono-sm" %}Guardar</button>
+    </div>
+  </form>
+</section>
+{% endblock %}

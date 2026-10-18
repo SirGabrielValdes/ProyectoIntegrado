@@ -1,0 +1,5 @@
+# Herramientas de pruebas (no se instalan en producción)
+-r requirements.txt
+playwright==1.64.0        # pruebas de interfaz en navegador
+locust==2.46.7            # pruebas de estrés
+psutil==7.2.2             # registro de CPU y memoria durante el estrés

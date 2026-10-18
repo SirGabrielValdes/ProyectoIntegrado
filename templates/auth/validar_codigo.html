@@ -1,0 +1,37 @@
+{% extends "auth/base_auth.html" %}
+{% load static sgr %}
+{% block titulo %}Validar código{% endblock %}
+{% block contenido %}
+{% include "auth/_pasos.html" with paso=2 %}
+<h2>Validar código</h2>
+<p class="subtitulo">Si <strong>{{ correo }}</strong> corresponde a una cuenta activa, recibirá un código de 6 dígitos. Vigencia: {{ vigencia }} minutos.</p>
+<form method="post" id="form-codigo" data-un-envio novalidate>
+  {% csrf_token %}
+  <div class="campo{% if form.codigo.errors %} con-error{% endif %}">
+    <label class="etiqueta" id="etiqueta-codigo">Código de verificación <span class="obligatorio" aria-hidden="true">*</span></label>
+    <div class="otp" role="group" aria-labelledby="etiqueta-codigo">
+      {% for i in "123456" %}
+        <input type="text" inputmode="numeric" pattern="[0-9]" maxlength="1" autocomplete="{% if forloop.first %}one-time-code{% else %}off{% endif %}"
+               aria-label="Dígito {{ i }} de 6" data-otp {% if forloop.first %}autofocus{% endif %}>
+      {% endfor %}
+    </div>
+    <input type="hidden" name="codigo" id="codigo">
+    <div class="ayuda">Puede pegar el código completo. Use las flechas para moverse entre casillas.</div>
+    {% for e in form.codigo.errors %}<div class="error-campo" role="alert">{% icono "alerta" "icono-sm" %}{{ e }}</div>{% endfor %}
+  </div>
+  <div class="temporizador" aria-live="polite">
+    <span>{% icono "reloj" "icono-sm" %} Vence en <strong id="vence" data-expira="{{ expira_iso }}">--:--</strong></span>
+    <span id="estado-reenvio" data-espera="{{ segundos_reenvio }}" data-restantes="{{ reenvios_restantes }}"></span>
+  </div>
+  <button class="btn btn-primario btn-bloque" type="submit">{% icono "check" "icono-sm" %}Validar código</button>
+</form>
+<form method="post" action="{% url 'cuentas:reenviar_codigo' %}" style="margin-top:10px">
+  {% csrf_token %}
+  <button class="btn btn-neutro btn-bloque" type="submit" id="btn-reenviar" disabled>{% icono "correo" "icono-sm" %}Reenviar código</button>
+</form>
+<div class="enlaces-acceso">
+  <a href="{% url 'cuentas:recuperar' %}">Usar otro correo</a>
+  <a href="{% url 'cuentas:login' %}">Volver al inicio de sesión</a>
+</div>
+{% endblock %}
+{% block scripts %}<script src="{% static 'js/recuperacion.js' %}"></script>{% endblock %}

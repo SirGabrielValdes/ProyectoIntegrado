@@ -1,0 +1,8 @@
+{# Los mensajes del servidor se presentan con SweetAlert2 (static/js/sgr.js). #}
+<script type="application/json" id="mensajes-sgr">[{% for m in messages %}{"nivel": "{{ m.tags|escapejs }}", "texto": "{{ m|escapejs }}"}{% if not forloop.last %},{% endif %}{% endfor %}]</script>
+{% if errores_formulario %}
+<script type="application/json" id="errores-formulario">{"total": {{ form.errors|length }}, "generales": [{% for e in form.non_field_errors %}"{{ e|escapejs }}"{% if not forloop.last %},{% endif %}{% endfor %}]}</script>
+{% endif %}
+<noscript>
+  {% for m in messages %}<p class="alerta">{{ m }}</p>{% endfor %}
+</noscript>

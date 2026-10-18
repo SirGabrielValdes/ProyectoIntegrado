@@ -1,0 +1,19 @@
+{% load sgr %}<div class="acciones-fila">
+  <a class="enlace-accion neutro" href="{% url modulo|add:':detalle' fila.obj.pk %}" aria-label="Ver {{ fila.obj }}">Ver</a>
+  {% if puede_editar %}<a class="enlace-accion" href="{% url modulo|add:':editar' fila.obj.pk %}" aria-label="Editar {{ fila.obj }}">Editar</a>{% endif %}
+  {% if puede_eliminar and fila.activo is not None %}
+    <form method="post" action="{% url modulo|add:':estado' fila.obj.pk %}"
+          data-confirmar="{% if fila.activo %}¿Desactivar «{{ fila.obj }}»? Dejará de estar disponible para nuevas operaciones.{% else %}¿Activar «{{ fila.obj }}»?{% endif %}"
+          data-confirmar-titulo="{% if fila.activo %}Desactivar registro{% else %}Activar registro{% endif %}"
+          data-confirmar-boton="{% if fila.activo %}Desactivar{% else %}Activar{% endif %}"
+          data-cancelado="No se realizaron cambios.">
+      {% csrf_token %}<input type="hidden" name="volver" value="{{ parametros }}">
+      <button class="enlace-accion neutro" type="submit">{% if fila.activo %}Desactivar{% else %}Activar{% endif %}</button>
+    </form>
+    <form method="post" action="{% url modulo|add:':eliminar' fila.obj.pk %}"
+          data-confirmar="¿Eliminar «{{ fila.obj }}»? Esta acción no se puede deshacer."
+          data-confirmar-titulo="Eliminar registro" data-confirmar-boton="Eliminar" data-cancelado="El registro no fue eliminado.">
+      {% csrf_token %}<button class="enlace-accion" type="submit">Eliminar</button>
+    </form>
+  {% endif %}
+</div>

@@ -1,0 +1,20 @@
+{% extends "auth/base_auth.html" %}
+{% load static sgr %}
+{% block titulo %}Nueva contraseña{% endblock %}
+{% block contenido %}
+{% include "auth/_pasos.html" with paso=3 %}
+<h2>Crear nueva contraseña</h2>
+<p class="subtitulo">Código verificado. Defina su nueva contraseña.</p>
+<form method="post" id="form-clave" data-validar data-un-envio novalidate>
+  {% csrf_token %}
+  {% include "crud/_campo.html" with campo=form.clave1 %}
+  <ul class="requisitos" id="requisitos" aria-live="polite" aria-label="Requisitos de la contraseña">
+    {% for clave, texto in requisitos %}<li class="no" data-requisito="{{ clave }}"><span class="marca" aria-hidden="true"></span><span>{{ texto }}</span><span class="sr-only estado-req">(pendiente)</span></li>{% endfor %}
+    <li class="no" data-requisito="coincide"><span class="marca" aria-hidden="true"></span><span>La confirmación coincide</span><span class="sr-only estado-req">(pendiente)</span></li>
+  </ul>
+  {% include "crud/_campo.html" with campo=form.clave2 %}
+  <button class="btn btn-primario btn-bloque" type="submit">{% icono "candado" "icono-sm" %}Guardar nueva contraseña</button>
+</form>
+<div class="enlaces-acceso"><a href="{% url 'cuentas:login' %}">Cancelar y volver al inicio de sesión</a></div>
+{% endblock %}
+{% block scripts %}<script src="{% static 'js/recuperacion.js' %}"></script>{% endblock %}

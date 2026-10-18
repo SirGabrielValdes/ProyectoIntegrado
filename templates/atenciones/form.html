@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% load static sgr %}
+{% block titulo %}Ingreso de atención{% endblock %}
+{% block migas %}<nav class="migas" aria-label="Ruta"><a href="{% url 'core:inicio' %}">Gestión municipal</a> / <a href="{% url 'atenciones:lista' %}">Atenciones</a> / Ingreso</nav>{% endblock %}
+{% block contenido %}
+<div class="encabezado">
+  <div><h1>Ingreso de atención</h1><p>Registro de atención ciudadana en la delegación activa.</p></div>
+</div>
+<section class="panel">
+  <p class="nota-obligatorios">Los campos marcados con <span class="obligatorio">*</span> son obligatorios.</p>
+  {% for e in form.non_field_errors %}<div class="alerta" role="alert">{% icono "alerta" %}{{ e }}</div>{% endfor %}
+  <form method="post" id="form-atencion" data-proteger data-validar data-un-envio novalidate
+        data-url-sub="{% url 'atenciones:api_subatenciones' %}" data-url-vecinos="{% url 'atenciones:api_vecinos' %}">
+    {% csrf_token %}
+    {{ form.token }}
+    <div class="form-grilla">
+      <fieldset class="campo completo{% if form.vecino.errors or form.rut.errors or form.nombre.errors %} con-error{% endif %}" style="border:0;padding:0;margin:0">
+        <legend class="etiqueta">Vecino o solicitante <span class="obligatorio" aria-hidden="true">*</span></legend>
+        <div class="selector-modo">{{ form.modo_vecino }}</div>
+
+        <div id="bloque-existente">
+          {{ form.vecino }}
+          <div id="vecino-elegido" class="vecino-elegido" {% if not vecino_sel %}hidden{% endif %}>
+            <span>{% icono "persona" "icono-sm" %} <span id="vecino-texto">{{ vecino_sel }}</span></span>
+            <button type="button" class="enlace-accion" id="vecino-quitar">Cambiar</button>
+          </div>
+          <div id="vecino-buscador" {% if vecino_sel %}hidden{% endif %}>
+            <label class="sr-only" for="buscar-vecino">Buscar vecino por RUT o nombre</label>
+            <div class="con-icono">{% icono "lupa" %}<input class="campo-input" id="buscar-vecino" type="search" autocomplete="off"
+                 placeholder="Buscar por RUT o nombre (mín. 2 caracteres)…" aria-controls="resultados-vecino"></div>
+            <ul class="resultados-vecino" id="resultados-vecino" hidden></ul>
+          </div>
+          {% for e in form.vecino.errors %}<div class="error-campo" role="alert">{% icono "alerta" "icono-sm" %}{{ e }}</div>{% endfor %}
+        </div>
+
+        <div id="bloque-nuevo" class="form-grilla" hidden style="margin-top:8px">
+          {% include "crud/_campo.html" with campo=form.rut %}
+          {% include "crud/_campo.html" with campo=form.nombre %}
+          {% include "crud/_campo.html" with campo=form.telefono %}
+          {% include "crud/_campo.html" with campo=form.correo %}
+        </div>
+      </fieldset>
+
+      <div class="campo">
+        <label class="etiqueta" for="delegacion-atencion">Delegación de atención</label>
+        <input class="campo-input" id="delegacion-atencion" type="text" readonly
+               value="{{ delegacion_activa.codigo }} · {{ delegacion_activa.nombre }} [Asignada por perfil]">
+        <div class="ayuda">Se toma del contexto autorizado de su perfil; no es editable.</div>
+      </div>
+      <div></div>
+      {% include "crud/_campo.html" with campo=form.tipo %}
+      {% include "crud/_campo.html" with campo=form.subatencion %}
+      {% include "crud/_campo.html" with campo=form.descripcion %}
+    </div>
+    <p class="registro-automatico" style="margin-top:16px">{% icono "info" "icono-sm" %}
+      <span>Responsable: <strong>{{ user.nombre }}</strong> (usuario de sesión) · Fecha y hora: automáticas al guardar · Delegación: {{ delegacion_activa.codigo }}</span></p>
+    <div class="botonera">
+      <a class="btn btn-neutro" data-cancelar href="{% url 'atenciones:lista' %}">Cancelar</a>
+      <button class="btn btn-primario" type="submit">{% icono "check" "icono-sm" %}Guardar atención</button>
+    </div>
+  </form>
+</section>
+{% endblock %}
+{% block scripts %}<script src="{% static 'js/atencion.js' %}"></script>{% endblock %}

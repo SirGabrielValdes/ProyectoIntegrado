@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% load sgr %}
+{% block titulo %}{{ obj }}{% endblock %}
+{% block migas %}<nav class="migas" aria-label="Ruta"><a href="{% url 'core:inicio' %}">Gestión municipal</a> / <a href="{% url modulo|add:':lista' %}">{{ m.nombre_modulo }}</a> / Consultar</nav>{% endblock %}
+{% block contenido %}
+<div class="encabezado">
+  <div>
+    <h1>{{ obj }}</h1>
+    <p>Consulta de {{ singular }}{% if activo is not None %} · {% estado obj.estado_texto %}{% endif %}</p>
+  </div>
+  <div class="acciones-encabezado">
+    <a class="btn btn-neutro" href="{% url modulo|add:':lista' %}">{% icono "volver" "icono-sm" %}Volver al listado</a>
+    {% block acciones_detalle %}
+    {% if puede_editar %}<a class="btn btn-primario" href="{% url modulo|add:':editar' obj.pk %}">{% icono "editar" "icono-sm" %}Editar</a>{% endif %}
+    {% endblock %}
+  </div>
+</div>
+<section class="panel">
+  <dl class="ficha">
+    {% for etiqueta, dato in datos %}<dt>{{ etiqueta }}</dt><dd>{{ dato|valor }}</dd>{% endfor %}
+    {% if activo is not None %}<dt>Estado</dt><dd>{% estado obj.estado_texto %}</dd>{% endif %}
+    {% if obj.creado %}<dt>Creado</dt><dd>{{ obj.creado|valor }}</dd>{% endif %}
+    {% if obj.actualizado %}<dt>Última modificación</dt><dd>{{ obj.actualizado|valor }}</dd>{% endif %}
+  </dl>
+  {% block extra_detalle %}{% endblock %}
+  {% if puede_eliminar and activo is not None %}
+  <div class="botonera">
+    {% if motivo_no_eliminar %}<div class="alerta alerta-neutra" style="margin:0 auto 0 0">{% icono "info" %}<span>{{ motivo_no_eliminar }}</span></div>{% endif %}
+    <form method="post" action="{% url modulo|add:':estado' obj.pk %}"
+          data-confirmar="{% if activo %}¿Desactivar «{{ obj }}»?{% else %}¿Activar «{{ obj }}»?{% endif %}"
+          data-confirmar-boton="{% if activo %}Desactivar{% else %}Activar{% endif %}" data-cancelado="No se realizaron cambios.">
+      {% csrf_token %}<button class="btn btn-neutro" type="submit">{% icono "pausa" "icono-sm" %}{% if activo %}Desactivar{% else %}Activar{% endif %}</button>
+    </form>
+    {% if not motivo_no_eliminar %}
+    <form method="post" action="{% url modulo|add:':eliminar' obj.pk %}"
+          data-confirmar="¿Eliminar «{{ obj }}»? Esta acción no se puede deshacer."
+          data-confirmar-titulo="Eliminar registro" data-confirmar-boton="Eliminar" data-cancelado="El registro no fue eliminado.">
+      {% csrf_token %}<button class="btn btn-secundario" type="submit">{% icono "basura" "icono-sm" %}Eliminar</button>
+    </form>
+    {% endif %}
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

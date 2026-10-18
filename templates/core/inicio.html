@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% load sgr %}
+{% block titulo %}Inicio{% endblock %}
+{% block migas %}<nav class="migas" aria-label="Ruta">Gestión municipal / Inicio</nav>{% endblock %}
+{% block contenido %}
+<div class="encabezado">
+  <div>
+    <h1>Hola, {{ user.nombre }}</h1>
+    <p>Perfil <strong>{{ user.rol.nombre }}</strong> · Delegación activa <strong>{{ delegacion_activa.codigo }} · {{ delegacion_activa.nombre }}</strong></p>
+  </div>
+  <div class="acciones-encabezado">
+    {% if puede_ingresar_atencion %}<a class="btn btn-primario" href="{% url 'atenciones:crear' %}">{% icono "mas" %}Ingresar atención</a>{% endif %}
+  </div>
+</div>
+
+{% if tarjetas %}
+<div class="grilla-tarjetas">
+  {% for t in tarjetas %}
+    <a class="tarjeta" href="{{ t.url }}">
+      <div class="tarjeta__valor">{{ t.valor }}</div>
+      <div class="tarjeta__titulo">{{ t.titulo }}</div>
+      <div class="tarjeta__detalle">{{ t.detalle }}</div>
+    </a>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div class="form-grilla">
+  <section class="panel" aria-labelledby="t-perfil">
+    <h2 class="panel__titulo" id="t-perfil">{% icono "escudo" %}Mi perfil y alcance</h2>
+    <dl class="ficha">
+      <dt>Usuario</dt><dd>{{ user.username }} · {{ user.correo }}</dd>
+      <dt>Rol</dt><dd>{{ user.rol.nombre }}</dd>
+      <dt>Alcance</dt><dd>{{ user.rol.get_alcance_display }}</dd>
+      <dt>Delegaciones autorizadas</dt>
+      <dd>{% for d in delegaciones_autorizadas %}<span class="chip{% if d.pk == delegacion_activa.pk %} chip-rojo{% endif %}" style="margin:2px">{% if d.pk == delegacion_activa.pk %}{% icono "ubicacion" "icono-sm" %}{% endif %}{{ d.codigo }} · {{ d.nombre }}{% if d.pk == delegacion_activa.pk %} (activa){% endif %}</span>{% endfor %}</dd>
+    </dl>
+    {% if delegaciones_autorizadas|length > 1 %}
+      <p class="ayuda" style="margin-top:10px">{% icono "intercambio" "icono-sm" %} Puede cambiar la delegación activa desde el selector de la cabecera. Los listados, filtros, exportaciones y formularios se actualizan con el nuevo contexto.</p>
+    {% else %}
+      <p class="ayuda" style="margin-top:10px">{% icono "candado" "icono-sm" %} Su perfil tiene una única delegación autorizada: el contexto es fijo.</p>
+    {% endif %}
+  </section>
+
+  <section class="panel" aria-labelledby="t-permisos">
+    <h2 class="panel__titulo" id="t-permisos">{% icono "candado" %}Permisos de su rol</h2>
+    <div class="tabla-contenedor">
+      <table class="tabla">
+        <thead><tr><th scope="col">Módulo</th><th scope="col">Acciones autorizadas</th></tr></thead>
+        <tbody>
+        {% for p in permisos_usuario %}
+          <tr><td><strong>{{ p.modulo }}</strong>{% if p.estado == "pendiente" %} <span class="chip">Plantilla</span>{% endif %}</td><td>{{ p.acciones|join:", " }}</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+{% endblock %}

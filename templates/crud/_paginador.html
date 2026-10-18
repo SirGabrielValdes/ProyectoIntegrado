@@ -1,0 +1,16 @@
+{% load sgr %}{% if pagina.paginator.num_pages > 1 %}
+<div class="pie-tabla">
+  <span>Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>
+  <nav aria-label="Paginación">
+    <ul class="paginador">
+      <li>{% if pagina.has_previous %}<a href="{% url_pagina pagina.previous_page_number %}" rel="prev">Anterior</a>{% else %}<span class="deshabilitado" aria-disabled="true">Anterior</span>{% endif %}</li>
+      {% for n in pagina.paginator.page_range %}
+        {% if n == pagina.number %}<li><span class="actual" aria-current="page">{{ n }}</span></li>
+        {% elif n > pagina.number|add:"-3" and n < pagina.number|add:"3" or n == 1 or n == pagina.paginator.num_pages %}<li><a href="{% url_pagina n %}">{{ n }}</a></li>
+        {% elif n == pagina.number|add:"-3" or n == pagina.number|add:"3" %}<li><span class="deshabilitado">…</span></li>{% endif %}
+      {% endfor %}
+      <li>{% if pagina.has_next %}<a href="{% url_pagina pagina.next_page_number %}" rel="next">Siguiente</a>{% else %}<span class="deshabilitado" aria-disabled="true">Siguiente</span>{% endif %}</li>
+    </ul>
+  </nav>
+</div>
+{% endif %}

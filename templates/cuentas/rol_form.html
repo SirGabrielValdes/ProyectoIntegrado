@@ -1,0 +1,32 @@
+{% extends "crud/form.html" %}
+{% load sgr %}
+{% block campos %}
+<div class="form-grilla">
+  {% include "crud/_campo.html" with campo=form.codigo %}
+  {% include "crud/_campo.html" with campo=form.nombre %}
+  {% include "crud/_campo.html" with campo=form.descripcion %}
+  {% include "crud/_campo.html" with campo=form.alcance %}
+  {% include "crud/_campo.html" with campo=form.activo %}
+</div>
+<fieldset class="campo{% if form.permisos.errors %} con-error{% endif %}" style="border:0;padding:0;margin:22px 0 0">
+  <legend class="etiqueta" style="font-size:.95rem">Permisos por módulo <span class="obligatorio" aria-hidden="true">*</span></legend>
+  {% if obj.es_sistema %}<div class="alerta alerta-neutra">{% icono "candado" %}<span>Rol protegido del sistema: conserva todos los permisos y alcance global.</span></div>{% endif %}
+  <p class="ayuda">Al marcar cualquier acción se otorga también «Ver» del módulo. Los módulos «Plantilla» muestran su navegación aunque su lógica esté pendiente.</p>
+  {% for e in form.permisos.errors %}<div class="error-campo" role="alert">{% icono "alerta" "icono-sm" %}{{ e }}</div>{% endfor %}
+  <div class="tabla-contenedor" style="margin-top:8px">
+    <table class="tabla matriz">
+      <thead><tr><th scope="col">Módulo</th>{% for clave, texto in acciones.items %}<th scope="col">{{ texto }}</th>{% endfor %}</tr></thead>
+      <tbody>
+      {% for fila in form.matriz %}
+        <tr>
+          <th scope="row" style="text-transform:none;font-family:inherit;font-size:.9rem;background:none">{{ fila.nombre }}{% if fila.estado == "pendiente" %} <span class="chip">Plantilla</span>{% endif %}</th>
+          {% for c in fila.celdas %}
+            <td>{% if c.disponible %}<input type="checkbox" name="permisos" value="{{ c.permiso }}" aria-label="{{ fila.nombre }}: {{ c.permiso }}" {% if c.marcado %}checked{% endif %} {% if obj.es_sistema %}disabled{% endif %}>{% else %}<span class="na" aria-label="No aplica">—</span>{% endif %}</td>
+          {% endfor %}
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</fieldset>
+{% endblock %}

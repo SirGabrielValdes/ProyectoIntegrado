@@ -1,0 +1,18 @@
+{% load sgr %}{% with tipo=campo|tipo_widget %}
+{% if tipo == "oculto" %}{{ campo }}{% else %}
+<div class="campo{% if campo.errors %} con-error{% endif %}{% if completo or tipo == 'checks' or tipo == 'area' %} completo{% endif %}">
+  {% if tipo == "check" %}
+    <label class="etiqueta" for="{{ campo.id_for_label }}">Estado</label>
+    <label class="check-linea">{{ campo }} {{ campo.label }}</label>
+  {% else %}
+    <label class="etiqueta" {% if tipo != "checks" and tipo != "radio" %}for="{{ campo.id_for_label }}"{% endif %}>{{ campo.label }}{% if campo.field.required %} <span class="obligatorio" aria-hidden="true">*</span><span class="sr-only">(obligatorio)</span>{% endif %}</label>
+    {% if tipo == "clave" %}
+      <div class="campo-clave">{{ campo }}<button type="button" data-ver-clave="{{ campo.id_for_label }}" aria-pressed="false" aria-label="Mostrar contraseña">{% icono "ojo" %}</button></div>
+    {% elif tipo == "checks" %}
+      <ul class="lista-checks">{% for op in campo %}<li><label>{{ op.tag }} {{ op.choice_label }}</label></li>{% endfor %}</ul>
+    {% else %}{{ campo }}{% endif %}
+  {% endif %}
+  {% if campo.help_text %}<div class="ayuda" id="{{ campo.auto_id }}_ayuda">{{ campo.help_text }}</div>{% endif %}
+  {% for e in campo.errors %}<div class="error-campo" role="alert">{% icono "alerta" "icono-sm" %}{{ e }}</div>{% endfor %}
+</div>
+{% endif %}{% endwith %}

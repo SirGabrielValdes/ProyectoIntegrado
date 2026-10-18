@@ -1,0 +1,18 @@
+{% extends "auth/base_auth.html" %}
+{% load sgr %}
+{% block titulo %}Iniciar sesión{% endblock %}
+{% block contenido %}
+<h2>Iniciar sesión</h2>
+<p class="subtitulo">Ingrese con su usuario o correo institucional y su contraseña.</p>
+{% for e in form.non_field_errors %}<div class="alerta" role="alert">{% icono "alerta" %}<span>{{ e }}</span></div>{% endfor %}
+<form method="post" data-validar data-un-envio novalidate>
+  {% csrf_token %}
+  <input type="hidden" name="next" value="{{ next }}">
+  {% include "crud/_campo.html" with campo=form.identificador %}
+  {% include "crud/_campo.html" with campo=form.clave %}
+  <button class="btn btn-primario btn-bloque" type="submit">{% icono "candado" "icono-sm" %}Ingresar</button>
+</form>
+<div class="enlaces-acceso">
+  <a href="{% url 'cuentas:recuperar' %}">¿Olvidó su contraseña?</a>
+</div>
+{% endblock %}

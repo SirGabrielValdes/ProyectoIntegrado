@@ -1,0 +1,16 @@
+{% load static %}<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Página no encontrada · SGR La Serena</title><link rel="stylesheet" href="{% static 'css/sgr.css' %}"></head>
+<body>
+<header class="cabecera"><a class="cabecera__marca" href="/"><img src="{% static 'img/logo-la-serena-blanco.png' %}" alt="Ilustre Municipalidad de La Serena"><span class="cabecera__sistema"><strong>SGR</strong><span>Sistema de Gestión de Requerimientos</span></span></a></header>
+<main class="contenido" style="max-width:640px;margin:40px auto">
+  <section class="panel">
+    <p class="chip chip-rojo">Error 404</p>
+    <h1>Página no encontrada</h1>
+    <p>El registro no existe o está fuera del alcance autorizado de su perfil.</p>
+    <div class="botonera" style="justify-content:flex-start"><a class="btn btn-primario" href="/">Ir al inicio</a><a class="btn btn-neutro" href="javascript:history.back()">Volver</a></div>
+  </section>
+</main>
+<script src="{% static 'vendor/sweetalert2/sweetalert2.all.min.js' %}"></script>
+<script>Swal.fire({icon:"error",title:"Página no encontrada",text:"El registro no existe o está fuera del alcance autorizado de su perfil.",confirmButtonColor:"#C41230",confirmButtonText:"Aceptar"});</script>
+</body></html>
