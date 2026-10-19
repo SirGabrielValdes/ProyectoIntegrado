@@ -84,8 +84,13 @@ class Command(BaseCommand):
                 Rol.objects.filter(pk=rol.pk).update(es_sistema=datos["es_sistema"])
             roles[clave_rol] = rol
 
+        # SGR_CORREO_ADMIN: correo real del superadmin (p. ej. el personal del encargado),
+        # para recibir el código de recuperación. Se define solo en el .env del servidor.
+        correo_admin = os.environ.get("SGR_CORREO_ADMIN", "").strip().lower()
         usuarios = []
         for username, nombre, correo, rol, dels, activo in USUARIOS:
+            if username == "superadmin" and correo_admin:
+                correo = correo_admin
             u = Usuario.objects.filter(username=username).first() or Usuario(username=username)
             u.nombre, u.correo, u.rol, u.is_active = nombre, correo, roles[rol], activo
             u.set_password(clave)

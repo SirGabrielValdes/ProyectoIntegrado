@@ -103,15 +103,17 @@ Toda la configuración se lee desde variables de entorno o desde el archivo `.en
 
 ## Despliegue en AWS
 
-Guía completa en **[`docs/despliegue_aws.md`](docs/despliegue_aws.md)**: servicios y componentes AWS, configuración e inicio/actualización. En resumen:
+En una instancia EC2 Ubuntu 24.04 (con el puerto HTTP 80 abierto):
 
 ```bash
-sudo bash deploy/instalar_ec2.sh <url-repositorio> <etiqueta>   # instalación inicial en la EC2
-sudo nano /opt/sgr/app/.env                                     # completar secretos (solo en la EC2)
-sudo bash /opt/sgr/app/deploy/actualizar.sh <etiqueta> --datos-demo
+git clone https://github.com/SirGabrielValdes/ProyectoIntegrado.git
+cd ProyectoIntegrado
+sudo bash deploy/instalar_ec2.sh
 ```
 
-`GET /salud/` verifica que la aplicación responde y se conecta a la base de datos.
+El script pide su **correo personal** (donde llegará el código de recuperación de `superadmin`) y una cuenta **Gmail con contraseña de aplicación** para enviarlo. Lo demás lo hace solo: MariaDB, claves aleatorias, IP pública, datos de prueba, gunicorn y nginx. Al final muestra la URL, el usuario y la contraseña. Guía paso a paso y solución de problemas en **[`docs/despliegue_aws.md`](docs/despliegue_aws.md)**.
+
+Para actualizar después: `sudo bash /opt/sgr/app/deploy/actualizar.sh`. `GET /salud/` verifica la aplicación y la base de datos.
 
 ## Base de datos
 
