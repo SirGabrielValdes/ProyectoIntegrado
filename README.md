@@ -56,7 +56,6 @@ python3 -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts
 pip install -r requirements.txt
 cp .env.example .env            # en local: DJANGO_DEBUG=1 y DB_ENGINE=sqlite (o deje DB_* para MySQL)
 python manage.py migrate
-python manage.py createcachetable
 python manage.py cargar_datos_demo
 python manage.py runserver
 ```
