@@ -7,6 +7,8 @@ El script pruebas/generar_matriz.py usa ese texto para construir la matriz
 de pruebas funcionales (requisito, módulo, precondiciones, pasos, esperado,
 obtenido, estado, evidencia, responsable y fecha).
 """
+from io import StringIO
+
 from django.contrib.messages import get_messages
 from django.core.cache import cache
 from django.core.management import call_command
@@ -26,7 +28,7 @@ CLAVE = "Serena.2026"
 class PruebaSGR(TestCase):
     @classmethod
     def setUpTestData(cls):
-        call_command("cargar_datos_demo", atenciones=0, vecinos=5, stdout=open("/dev/null", "w"))
+        call_command("cargar_datos_demo", atenciones=0, vecinos=5, stdout=StringIO())
         cls.del01 = Delegacion.objects.get(codigo="DEL01")
         cls.del02 = Delegacion.objects.get(codigo="DEL02")
         cls.del04 = Delegacion.objects.get(codigo="DEL04")

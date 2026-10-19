@@ -48,25 +48,48 @@ Todas las pantallas usan un mismo template con la identidad visual institucional
 | Despliegue | AWS EC2 + nginx + gunicorn + systemd, RDS MySQL (o MariaDB en la EC2) |
 | Pruebas | Django TestCase (funcionales), Playwright (interfaz), Locust (estrés) |
 
-## Instalación local
+## Instalación local (recién clonado, sin configurar nada)
+
+Requisito: **Python 3.11 o superior** ([python.org](https://www.python.org/downloads/)). En Windows, marque «Add Python to PATH» al instalarlo.
 
 ```bash
-git clone <url-del-repositorio> sgr && cd sgr
-python3 -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\activate
+git clone https://github.com/SirGabrielValdes/ProyectoIntegrado.git
+cd ProyectoIntegrado
+```
+
+Luego, **un solo paso**:
+
+- **Windows:** doble clic en `iniciar.bat` (o ejecútelo en una terminal).
+- **Linux / macOS:** `./iniciar.sh`
+
+El script crea el entorno virtual, instala las dependencias, prepara la base de datos SQLite con datos de prueba y abre el servidor. Después ingrese en <http://127.0.0.1:8000>:
+
+| Usuario | Contraseña | Rol |
+|---|---|---|
+| `superadmin` | `Serena.2026` | Superadministrador |
+| `coordinador` | `Serena.2026` | Coordinador |
+| `delegado` | `Serena.2026` | Delegado municipal |
+| `funcionario` | `Serena.2026` | Funcionario |
+
+Estas credenciales son de prueba. En AWS cámbielas con `SGR_CLAVE_DEMO`.
+
+<details><summary>Pasos manuales (equivalentes al script)</summary>
+
+```bash
+python -m venv .venv
+source .venv/bin/activate            # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-cp .env.example .env            # en local: DJANGO_DEBUG=1 y DB_ENGINE=sqlite (o deje DB_* para MySQL)
 python manage.py migrate
 python manage.py cargar_datos_demo
 python manage.py runserver
 ```
+</details>
 
-Abra <http://127.0.0.1:8000> e ingrese con `superadmin`, `coordinador`, `delegado` o `funcionario` y la contraseña definida en `SGR_CLAVE_DEMO`.
-
-> Sin `EMAIL_HOST`, el correo con el código de recuperación se imprime en la consola del servidor.
+No se necesita archivo `.env` para trabajar localmente: sin él, el proyecto usa modo desarrollo y SQLite. Sin `EMAIL_HOST`, el código de recuperación de contraseña se muestra en la terminal donde corre el servidor. Para recibirlo por correo, copie `.env.example` a `.env` y complete la sección de correo.
 
 ## Configuración
 
-Toda la configuración se lee desde variables de entorno o desde el archivo `.env`. Use `.env.example` como plantilla: no contiene secretos.
+Toda la configuración se lee desde variables de entorno o desde el archivo `.env`. Plantillas sin secretos: `.env.example` (desarrollo local, opcional) y `deploy/env.produccion.example` (AWS).
 
 | Variable | Descripción |
 |---|---|

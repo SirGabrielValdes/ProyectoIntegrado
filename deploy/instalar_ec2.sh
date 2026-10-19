@@ -35,7 +35,7 @@ sudo -u sgr "$BASE/venv/bin/pip" install --upgrade pip
 sudo -u sgr "$BASE/venv/bin/pip" install -r "$BASE/app/requirements.txt"
 
 if [ ! -f "$BASE/app/.env" ]; then
-  cp "$BASE/app/.env.example" "$BASE/app/.env"
+  cp "$BASE/app/deploy/env.produccion.example" "$BASE/app/.env"
   chown sgr:www-data "$BASE/app/.env"
   chmod 640 "$BASE/app/.env"
   echo "!! Complete $BASE/app/.env (clave secreta, base de datos, correo) y vuelva a ejecutar deploy/actualizar.sh"

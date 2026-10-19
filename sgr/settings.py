@@ -3,7 +3,9 @@ Configuración del Sistema de Gestión de Requerimientos (SGR)
 Municipalidad de La Serena.
 
 Toda configuración sensible se lee desde variables de entorno (archivo .env).
-Ver .env.example para la lista completa de variables.
+
+- Sin .env el proyecto arranca en modo desarrollo local (DEBUG, SQLite).
+- Producción/AWS: ver deploy/env.produccion.example.
 """
 import os
 from pathlib import Path
@@ -29,13 +31,13 @@ def env_list(nombre, defecto=""):
     return [v.strip() for v in os.environ.get(nombre, defecto).split(",") if v.strip()]
 
 
-DEBUG = env_bool("DJANGO_DEBUG", False)
-SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "")
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "").strip()
+# Sin clave secreta definida se asume desarrollo local (recién clonado).
+DEBUG = env_bool("DJANGO_DEBUG", not SECRET_KEY)
+if not DEBUG and (not SECRET_KEY or SECRET_KEY.startswith("cambiar")):
+    raise RuntimeError("Producción: defina DJANGO_SECRET_KEY en .env (ver deploy/env.produccion.example).")
 if not SECRET_KEY:
-    if DEBUG:
-        SECRET_KEY = "solo-desarrollo-no-usar-en-produccion"
-    else:
-        raise RuntimeError("Defina DJANGO_SECRET_KEY en el entorno (ver .env.example).")
+    SECRET_KEY = "solo-desarrollo-local-no-usar-en-produccion"
 
 ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1")
 CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS", "")

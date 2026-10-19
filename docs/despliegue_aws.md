@@ -54,7 +54,7 @@ sudo bash deploy/instalar_ec2.sh <url-del-repositorio> <etiqueta-entrega>     # 
 # o: sudo bash deploy/instalar_ec2.sh <url> <etiqueta> --mysql-local          # MariaDB en la EC2
 ```
 
-Complete la configuración (vea `.env.example`):
+Complete la configuración. `instalar_ec2.sh` crea `.env` a partir de `deploy/env.produccion.example`:
 
 ```bash
 sudo nano /opt/sgr/app/.env
