@@ -1,0 +1,30 @@
+@startuml
+!include _estilo.iuml
+left to right direction
+title CU de detalle · EP01 Acceso y seguridad
+
+actor "Usuario municipal" as U
+actor "Servidor de correo\n(SMTP)" as M <<sistema>>
+rectangle "SGR · Acceso" {
+  usecase "CU01 Iniciar sesión" as CU01
+  usecase "Validar credenciales\ny estado de la cuenta" as V
+  usecase "Bloquear por\nintentos fallidos" as B
+  usecase "CU02 Recuperar contraseña" as CU02
+  usecase "CU02.1 Solicitar código" as C1
+  usecase "CU02.2 Validar código" as C2
+  usecase "CU02.3 Reenviar código" as C3
+  usecase "CU02.4 Crear nueva contraseña" as C4
+  usecase "CU03 Cerrar sesión" as CU03
+}
+U --> CU01
+U --> CU02
+U --> CU03
+CU01 ..> V : <<include>>
+B .> CU01 : <<extend>>
+CU02 ..> C1 : <<include>>
+CU02 ..> C2 : <<include>>
+CU02 ..> C4 : <<include>>
+C3 .> C2 : <<extend>>
+C1 --> M
+C3 --> M
+@enduml

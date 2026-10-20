@@ -1,0 +1,50 @@
+@startuml
+!include _estilo.iuml
+title Diagrama de requerimientos · trazabilidad entre artefactos (ejemplo EP01 y EP04)
+skinparam class {
+  BackgroundColor #FFFFFF
+}
+hide circle
+hide empty methods
+
+class "<<requirement>>\nNEC: Atención ciudadana\ntrazable por delegación" as N {
+  fuente = Requisitos 2ª evaluación (cliente)
+}
+class "<<requirement>>\nRF17 Registrar atención" as RF17 {
+  id = RF17
+  prioridad = Alta
+}
+class "<<requirement>>\nRF18 Identificar o registrar vecino" as RF18
+class "<<requirement>>\nRNF02 Validación en servidor\ny control de acceso" as RNF02
+class "<<épica>>\nEP04 Atención ciudadana" as EP04
+class "<<historia>>\nHU13 Registrar atención\n8 SP" as HU13
+class "<<caso de uso>>\nCU11 Registrar atención" as CU11
+class "<<caso de uso>>\nCU11.3 Seleccionar tipo y\nsub atención dependiente" as CU113
+class "<<wireframe>>\nWF04 Ingreso de atención" as WF04
+class "<<componente>>\natenciones (Django)" as COMP
+class "<<prueba>>\nIngresoAtencionTests\nUI-09" as T
+
+class "<<requirement>>\nNEC: Acceso seguro\ncon recuperación" as N2
+class "<<requirement>>\nRF04–RF06 Recuperar contraseña" as RF04
+class "<<épica>>\nEP01 Acceso y seguridad" as EP01
+class "<<historia>>\nHU02 Recuperar contraseña\n8 SP" as HU02
+class "<<caso de uso>>\nCU02 Recuperar contraseña" as CU02
+class "<<wireframe>>\nWF02 Validar código" as WF02
+
+RF17 ..|> N : <<derive>>
+RF18 ..|> N : <<derive>>
+RNF02 ..> RF17 : <<refine>>
+EP04 ..> RF17 : <<trace>>
+HU13 ..> EP04 : <<trace>>
+CU11 ..> HU13 : <<trace>>
+CU113 ..> CU11 : <<refine>>
+WF04 ..> CU113 : <<trace>>
+COMP ..> RF17 : <<satisfy>>
+T ..> RF17 : <<verify>>
+
+RF04 ..|> N2 : <<derive>>
+EP01 ..> RF04 : <<trace>>
+HU02 ..> EP01 : <<trace>>
+CU02 ..> HU02 : <<trace>>
+WF02 ..> CU02 : <<trace>>
+@enduml

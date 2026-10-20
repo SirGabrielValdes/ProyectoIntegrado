@@ -1,0 +1,20 @@
+@startuml
+scale 2
+title WF02 · Validar código (RF05 · EP01 · CU02.2)
+salt
+{+
+  { 1. Solicitar código | <b>2. Validar código</b> | 3. Nueva contraseña }
+  .
+  { <b>Validar código</b> }
+  { Si el correo corresponde a una cuenta activa recibirá un código }
+  .
+  Código de verificación *
+  { "4" | "8" | "1" | "0" | "2" | "7" }
+  .
+  { Vence en 09:42 | . | Reenvío disponible en 38 s }
+  .
+  [          Validar código          ]
+  [ Reenviar código (deshabilitado) ]
+  { Usar otro correo | Volver al inicio de sesión }
+}
+@enduml

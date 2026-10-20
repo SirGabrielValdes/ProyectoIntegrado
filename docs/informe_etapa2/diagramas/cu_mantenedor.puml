@@ -1,0 +1,29 @@
+@startuml
+!include _estilo.iuml
+title CU de detalle · CU06 Gestionar usuarios (patrón común de los seis mantenedores)
+
+actor "Coordinador" as C
+actor "Superadministrador" as S
+S -|> C
+rectangle "SGR · Mantenedor de Usuarios" {
+  usecase "CU06 Gestionar usuarios" as CU06
+  usecase "CU06.1 Listar y buscar usuarios" as L
+  usecase "CU06.2 Crear usuario" as N
+  usecase "CU06.3 Consultar usuario" as V
+  usecase "CU06.4 Editar usuario" as E
+  usecase "CU06.5 Eliminar o desactivar usuario" as D
+  usecase "CU13 Exportar listado a Excel" as X
+  usecase "Validar permiso y alcance\npor delegación" as P
+  usecase "Validar datos\n(requeridos, formato, duplicados)" as VD
+}
+C --> CU06
+CU06 ..> L : <<include>>
+N .> CU06 : <<extend>>
+V .> CU06 : <<extend>>
+E .> CU06 : <<extend>>
+D .> CU06 : <<extend>>
+X .> L : <<extend>>
+L ..> P : <<include>>
+N ..> VD : <<include>>
+E ..> VD : <<include>>
+@enduml

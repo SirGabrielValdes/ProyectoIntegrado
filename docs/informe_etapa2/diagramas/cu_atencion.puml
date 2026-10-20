@@ -1,0 +1,25 @@
+@startuml
+!include _estilo.iuml
+left to right direction
+title CU de detalle · EP04 Atención ciudadana
+
+actor "Funcionario" as F
+rectangle "SGR · Atención ciudadana" {
+  usecase "CU11 Registrar atención" as CU11
+  usecase "CU11.1 Identificar vecino\n(buscar por RUT o nombre)" as I
+  usecase "CU11.2 Registrar nuevo vecino" as NV
+  usecase "CU11.3 Seleccionar tipo y\nsub atención dependiente" as T
+  usecase "Asignar delegación, responsable\ny fecha desde la sesión" as A
+  usecase "Emitir folio de atención" as FO
+  usecase "CU12 Consultar atenciones" as CU12
+  usecase "CU13 Exportar listado a Excel" as X
+}
+F --> CU11
+F --> CU12
+CU11 ..> I : <<include>>
+NV .> I : <<extend>>
+CU11 ..> T : <<include>>
+CU11 ..> A : <<include>>
+CU11 ..> FO : <<include>>
+X .> CU12 : <<extend>>
+@enduml

@@ -1,0 +1,44 @@
+skinparam dpi 170
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 12
+skinparam shadowing false
+skinparam roundCorner 8
+skinparam ArrowColor #3D3D3D
+skinparam ActorBorderColor #3D3D3D
+skinparam ActorBackgroundColor #FFFFFF
+skinparam usecase {
+  BackgroundColor #FFFFFF
+  BorderColor #C41230
+}
+skinparam rectangle {
+  BorderColor #6E6E6E
+}
+skinparam package {
+  BorderColor #6E6E6E
+  BackgroundColor #FAFAFA
+}
+skinparam class {
+  BackgroundColor #FFFFFF
+  BorderColor #C41230
+  HeaderBackgroundColor #F6E1E5
+}
+skinparam component {
+  BackgroundColor #FFFFFF
+  BorderColor #C41230
+}
+skinparam node {
+  BackgroundColor #FAFAFA
+  BorderColor #3D3D3D
+}
+skinparam database {
+  BackgroundColor #FFFFFF
+  BorderColor #C41230
+}
+skinparam artifact {
+  BackgroundColor #FFFFFF
+  BorderColor #6E6E6E
+}
+skinparam note {
+  BackgroundColor #FFFDF5
+  BorderColor #BDBDBD
+}

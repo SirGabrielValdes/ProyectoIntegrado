@@ -1,0 +1,42 @@
+@startuml
+!include _estilo.iuml
+title Diagrama de componentes · SGR
+
+package "Navegador del usuario" {
+  [Plantillas HTML/CSS\n(template institucional)] as UI
+  [sgr.js · atencion.js\nrecuperacion.js] as JS
+  [SweetAlert2] as SW
+}
+package "Servidor web" {
+  [nginx\n(proxy inverso y estáticos)] as NG
+  [gunicorn\n(servidor WSGI)] as GU
+}
+package "Aplicación Django (SGR)" {
+  [core\nplantilla · permisos · contexto de delegación\nbase CRUD · exportación] as CORE
+  [cuentas\nlogin · recuperación\nroles · usuarios] as CUE
+  [catalogos\ndelegaciones · ítems\ntipos · sub atenciones] as CAT
+  [atenciones\nvecinos · ingreso y consulta] as ATE
+  [ORM de Django] as ORM
+  [Middleware de seguridad\n(sesión, CSRF, login requerido)] as MW
+  [openpyxl\n(exportación Excel)] as XL
+}
+database "MySQL / MariaDB" as DB
+[Servidor SMTP\n(Gmail)] as SMTP
+
+JS --> SW
+UI ..> JS
+UI --> NG : HTTP
+JS --> NG : fetch (JSON)
+NG --> GU
+GU --> MW
+MW --> CORE
+CORE --> CUE
+CORE --> CAT
+CORE --> ATE
+CORE --> XL
+CUE --> ORM
+CAT --> ORM
+ATE --> ORM
+ORM --> DB : SQL (PyMySQL)
+CUE --> SMTP : código de recuperación
+@enduml

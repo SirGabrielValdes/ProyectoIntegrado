@@ -1,0 +1,91 @@
+@startuml
+!include _estilo.iuml
+title Diagrama de clases del dominio · SGR
+hide empty members
+
+abstract class Catalogo {
+  - codigo : String {único}
+  - nombre : String
+  - activo : Boolean
+  - creado : DateTime
+  - actualizado : DateTime
+  + estado_texto() : String
+  + save()
+}
+class Delegacion {
+  - direccion : String
+  - comuna : String
+}
+class Item {
+  - descripcion : Text
+}
+class TipoAtencion {
+  - descripcion : Text
+}
+class SubAtencion
+class Rol {
+  - codigo : String {único}
+  - nombre : String {único}
+  - descripcion : Text
+  - permisos : List<String>
+  - alcance : {GLOBAL, MULTIPLE, DELEGACION}
+  - activo : Boolean
+  - es_sistema : Boolean
+  + es_global() : Boolean
+}
+class Usuario {
+  - username : String {único}
+  - correo : Email {único}
+  - nombre : String
+  - password : Hash
+  - is_active : Boolean
+  - last_login : DateTime
+  + tiene_permiso(codigo) : Boolean
+  + delegaciones_autorizadas() : List<Delegacion>
+  + check_password(clave) : Boolean
+}
+class SolicitudRecuperacion {
+  - token : String {único}
+  - codigo_hash : Hash
+  - expira : DateTime
+  - ultimo_envio : DateTime
+  - intentos : Int
+  - reenvios : Int
+  - verificado_en : DateTime
+  - usado_en : DateTime
+  - anulado : Boolean
+  + crear(usuario) : (Solicitud, codigo)
+  + renovar_codigo() : String
+  + codigo_correcto(codigo) : Boolean
+  + vencida() : Boolean
+  + bloqueada() : Boolean
+}
+class Vecino {
+  - rut : String {único}
+  - nombre : String
+  - telefono : String
+  - correo : Email
+  - direccion : String
+  + rut_formateado() : String
+}
+class Atencion {
+  - descripcion : Text
+  - fecha_registro : DateTime
+  - token_envio : String {único}
+  + folio() : String
+}
+
+Catalogo <|-- Delegacion
+Catalogo <|-- Item
+Catalogo <|-- TipoAtencion
+Catalogo <|-- SubAtencion
+TipoAtencion "1" *-- "0..*" SubAtencion : clasifica >
+Rol "1" -- "0..*" Usuario : asignado a <
+Usuario "0..*" -- "0..*" Delegacion : autorizada en >
+Usuario "1" *-- "0..*" SolicitudRecuperacion : solicita >
+Atencion "0..*" --> "1" Vecino : solicitante
+Atencion "0..*" --> "1" TipoAtencion
+Atencion "0..*" --> "1" SubAtencion
+Atencion "0..*" --> "1" Delegacion : registrada en
+Atencion "0..*" --> "1" Usuario : responsable
+@enduml

@@ -1,0 +1,63 @@
+@startuml
+!include _estilo.iuml
+left to right direction
+title Diagrama de casos de uso de alto nivel · SGR
+
+actor "Usuario municipal" as U
+actor "Funcionario" as F
+actor "Delegado municipal" as D
+actor "Coordinador" as C
+actor "Superadministrador" as S
+actor "Servidor de correo\n(SMTP)" as M <<sistema>>
+F -|> U
+D -|> F
+C -|> D
+S -|> C
+
+rectangle "Sistema de Gestión de Requerimientos (SGR)" {
+  package "EP01 Acceso y seguridad" {
+    usecase "CU01 Iniciar sesión" as CU01
+    usecase "CU02 Recuperar contraseña" as CU02
+    usecase "CU03 Cerrar sesión" as CU03
+  }
+  package "EP02 Estructura municipal" {
+    usecase "CU04 Gestionar delegaciones" as CU04
+    usecase "CU05 Gestionar roles y permisos" as CU05
+    usecase "CU06 Gestionar usuarios" as CU06
+    usecase "CU07 Cambiar delegación activa" as CU07
+  }
+  package "EP03 Catálogos de atención" {
+    usecase "CU08 Gestionar ítems y metas" as CU08
+    usecase "CU09 Gestionar tipos de atención" as CU09
+    usecase "CU10 Gestionar sub atenciones" as CU10
+  }
+  package "EP04 Atención ciudadana" {
+    usecase "CU11 Registrar atención" as CU11
+    usecase "CU12 Consultar atenciones" as CU12
+  }
+  package "EP05 Gestión de información" {
+    usecase "CU13 Exportar listado a Excel" as CU13
+  }
+}
+
+U --> CU01
+U --> CU02
+U --> CU03
+F --> CU11
+F --> CU12
+D --> CU08
+D --> CU09
+D --> CU10
+C --> CU06
+C --> CU07
+C --> CU13
+S --> CU04
+S --> CU05
+CU02 --> M
+note right of S
+  Herencia de actores: cada rol hereda los casos
+  del rol inferior. El alcance real de cada acción
+  (ver / crear / editar / eliminar / exportar)
+  lo define la matriz de permisos del rol.
+end note
+@enduml

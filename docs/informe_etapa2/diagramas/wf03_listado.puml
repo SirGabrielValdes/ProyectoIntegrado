@@ -1,0 +1,30 @@
+@startuml
+scale 2
+title WF03 · Listado de mantenedor (RF07–RF14 · EP02/EP03/EP05 · CU06.1)
+salt
+{+
+  {* [LOGO] SGR | [📍 DEL01 · Delegación Centro ▼] | Nombre usuario · Rol | [Salir] }
+  {
+    { Inicio
+      <b>Usuarios</b>
+      Roles
+      Delegaciones
+      Ítems y metas
+      Tipo de Atención
+      Sub Atención
+      Atenciones } |
+    {
+      { Gestión municipal / Usuarios }
+      { <b>Usuarios</b> | . | . | [+ Nuevo usuario] }
+      { "Buscar por nombre, usuario o correo…" | ^Rol^ | ^Estado^ | [Buscar] | [Exportar a Excel] }
+      { Mostrando 1 a 10 de 24 registros }
+      {#
+        <b>Nombre</b> | <b>Correo</b> | <b>Rol</b> | <b>Delegación</b> | <b>Estado</b> | <b>Acciones</b>
+        Nombre 1 | correo1@… | Funcionario | DEL01 | ✓ Activo | Ver Editar Desactivar Eliminar
+        Nombre 2 | correo2@… | Delegado | DEL01 | ⏸ Inactivo | Ver Editar Activar Eliminar
+      }
+      { [Anterior] | [1] | [2] | [3] | [Siguiente] }
+    }
+  }
+}
+@enduml

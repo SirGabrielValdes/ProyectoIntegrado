@@ -1,0 +1,30 @@
+@startuml
+!include _estilo.iuml
+title Diagrama de despliegue · SGR en AWS
+
+node "Equipo del funcionario\n(PC / tablet / móvil)" as PC {
+  artifact "Navegador web\n(Chrome, Edge, Firefox, Safari)" as NAV
+}
+cloud "AWS · región us-east-1" {
+  node "Security Group sgr\nentrada: 80/HTTP, 22/SSH" as SG {
+    node "EC2 · Ubuntu Server 24.04\nt3.micro / t3.small" as EC2 {
+      node "nginx 1.24" as NGX {
+        artifact "staticfiles/\n(CSS, JS, fuentes, logo)" as ST
+      }
+      node "gunicorn (systemd: sgr.service)" as GUN {
+        artifact "SGR (Django 5.2)\n/opt/sgr/app" as APP
+        artifact ".env\n(secretos)" as ENV
+      }
+      database "MariaDB 10.11\nbase «sgr»" as MDB
+    }
+  }
+}
+node "Gmail SMTP\nsmtp.gmail.com:587" as GM
+node "GitHub\nrepositorio del proyecto" as GH
+
+NAV --> NGX : HTTP :80
+NGX --> GUN : HTTP 127.0.0.1:8000
+GUN --> MDB : TCP 127.0.0.1:3306
+GUN --> GM : SMTP/TLS :587
+EC2 ..> GH : git clone / pull\n(instalar_ec2.sh, actualizar.sh)
+@enduml
