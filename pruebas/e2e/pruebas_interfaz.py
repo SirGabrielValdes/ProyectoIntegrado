@@ -62,7 +62,23 @@ def cerrar_swal(pg):
     pg.wait_for_selector(".swal2-popup", state="hidden", timeout=5000)
 
 
+def mensajes(pg, espera=4000):
+    """Lee y cierra todos los SweetAlert2 encadenados que muestre la página."""
+    textos = []
+    while True:
+        try:
+            pg.wait_for_selector(".swal2-popup", state="visible", timeout=espera)
+        except Exception:  # noqa: BLE001 - no hay más mensajes
+            return " | ".join(textos)
+        textos.append(pg.inner_text(".swal2-title") + " — " + pg.inner_text(".swal2-html-container"))
+        if pg.is_visible(".swal2-confirm"):
+            pg.click(".swal2-confirm")
+        pg.wait_for_selector(".swal2-popup", state="hidden", timeout=6000)
+        espera = 1500
+
+
 def entrar(pg, url, usuario, clave=CLAVE):
+    pg.context.clear_cookies()
     pg.goto(url + "/cuenta/ingresar/")
     pg.fill("#id_identificador", usuario)
     pg.fill("#id_clave", clave)
@@ -352,8 +368,9 @@ def ui_movil(c):
     return "21_movil_inicio.png, 22_movil_menu.png"
 
 
-def dia_habil_reciente():
-    d = date.today()
+def dia_habil_reciente(maximo=None):
+    """Día hábil más reciente según la fecha local del servidor (atributo max del campo)."""
+    d = date.fromisoformat(maximo) if maximo else date.today()
     while d.weekday() > 4:
         d -= timedelta(days=1)
     return d
@@ -375,11 +392,8 @@ def ui_clave_provisoria(c):
     captura(pg, "23_usuario_nuevo_sin_clave.png", completa=True)
     pg.click("main form[data-validar] button[type=submit]")
     pg.wait_for_url(re.compile(".*/usuarios/\\d+/"))
-    texto = swal(pg)
-    cerrar_swal(pg)
-    texto += swal(pg)
+    texto = mensajes(pg)
     assert "clave provisoria" in texto, texto
-    cerrar_swal(pg)
     time.sleep(0.5)
     clave = re.findall(r"Clave provisoria: (\S+)", Path(log).read_text(encoding="utf-8", errors="ignore"))[-1]
     salir(pg)
@@ -388,7 +402,7 @@ def ui_clave_provisoria(c):
     pg.fill("#id_clave", clave)
     pg.click("form button[type=submit]")
     pg.wait_for_url(re.compile(".*/cuenta/cambiar-clave/"))
-    cerrar_swal_si(pg)
+    mensajes(pg, 1500)
     pg.goto(url + "/atenciones/")
     assert "/cuenta/cambiar-clave/" in pg.url, "Debe forzar el cambio de clave"
     captura(pg, "24_cambio_clave_obligatorio.png")
@@ -396,9 +410,7 @@ def ui_clave_provisoria(c):
     pg.fill("#id_clave2", "MiClave#2026")
     pg.click("#form-clave button[type=submit]")
     pg.wait_for_url(url + "/")
-    assert "Contraseña actualizada" in swal(pg)
-    cerrar_swal(pg)
-    salir(pg)
+    assert "Contraseña actualizada" in mensajes(pg)
     return "23_usuario_nuevo_sin_clave.png, 24_cambio_clave_obligatorio.png"
 
 
@@ -409,23 +421,20 @@ def ui_actividad(c):
     pg.goto(url + "/actividades/nuevo/")
     assert "Felicitaciones formales" not in pg.inner_text("#id_item")
     pg.select_option("#id_item", index=1)
-    pg.fill("#id_fecha", dia_habil_reciente().isoformat())
+    pg.fill("#id_fecha", dia_habil_reciente(pg.get_attribute("#id_fecha", "max")).isoformat())
     pg.fill("#id_nombre_contacto", "Marta Henríquez")
     pg.fill("#id_telefono_contacto", "+56 9 1111 2222")
     pg.fill("#id_descripcion", "Visita domiciliaria registrada en la prueba de interfaz.")
     captura(pg, "25_registrar_actividad.png", completa=True)
     pg.click("main form[data-validar] button[type=submit]")
     pg.wait_for_url(re.compile(".*/actividades/\\d+/"))
-    textos = swal(pg)
-    cerrar_swal(pg)
-    textos += swal(pg)
-    assert "suma 1 punto" in textos or "máximo diario" in textos, textos
+    pg.wait_for_selector(".swal2-popup", state="visible", timeout=5000)
     captura(pg, "26_actividad_puntaje.png")
-    cerrar_swal(pg)
+    textos = mensajes(pg)
+    assert "suma 1 punto" in textos, textos
     pg.goto(url + "/dashboard/funcionario/")
     assert "Cumplimiento por ítem" in pg.inner_text("main")
     captura(pg, "27_dashboard_funcionario.png", completa=True)
-    salir(pg)
     return "25..27_*.png"
 
 
@@ -439,30 +448,25 @@ def ui_tubo(c):
     swal(pg)
     pg.click(".swal2-confirm")
     pg.wait_for_url(url + "/tubo/")
-    assert "movido a «Pendiente»" in swal(pg)
-    cerrar_swal(pg)
+    assert "movido a «Pendiente»" in mensajes(pg)
     pg.click(".col-en_proceso a:has-text('Ver') >> nth=0")
     pg.wait_for_url(re.compile(".*/tubo/\\d+/"))
     if pg.is_visible("button[value=aprobar]"):
         pg.click("button[value=aprobar] >> nth=0")
         pg.wait_for_load_state()
-        assert "Evidencia aprobada" in swal(pg)
-        cerrar_swal(pg)
+        assert "Evidencia aprobada" in mensajes(pg)
     captura(pg, "29_tubo_evidencia_aprobada.png", completa=True)
     pg.click(".acciones-encabezado button[type=submit]")
     swal(pg)
     pg.click(".swal2-confirm")
     pg.wait_for_load_state()
-    assert "Realizado" in swal(pg)
-    cerrar_swal(pg)
+    assert "Realizado" in mensajes(pg)
     pg.goto(url + "/dashboard/delegacion/")
     captura(pg, "30_dashboard_delegacion.png", completa=True)
-    salir(pg)
     entrar(pg, url, "superadmin")
     pg.goto(url + "/dashboard/general/")
     assert "Cumplimiento por delegación" in pg.inner_text("main")
     captura(pg, "31_dashboard_general.png", completa=True)
-    salir(pg)
     return "28..31_*.png"
 
 

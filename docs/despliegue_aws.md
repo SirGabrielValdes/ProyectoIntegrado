@@ -86,6 +86,14 @@ El script hace el resto: instala los paquetes, crea la base de datos con una cla
 | Ver el log de la aplicación | `sudo journalctl -u sgr -n 100` |
 | Verificar versión y base de datos | `git -C /opt/sgr/app describe --tags --always` y `curl http://127.0.0.1/salud/` |
 
+## Archivos subidos (Etapa 3)
+
+Las fotos de evidencia del tubo y los respaldos de las felicitaciones se guardan en `/opt/sgr/app/media/`. Esa ruta puede cambiarse con `SGR_MEDIA_ROOT`, por ejemplo hacia un volumen EBS aparte.
+
+- No se publican por nginx: se sirven por vistas que validan el permiso y la delegación del usuario.
+- nginx acepta cargas de hasta 12 MB (`client_max_body_size`); cada foto admite un máximo de 8 MB.
+- **Respaldos:** además de la base de datos, respalde esta carpeta. Por ejemplo: `sudo tar czf /home/ubuntu/media-$(date +%F).tgz -C /opt/sgr/app media`.
+
 ## Problemas frecuentes
 
 | Síntoma | Solución |

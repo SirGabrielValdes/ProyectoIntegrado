@@ -42,7 +42,7 @@ if not SECRET_KEY:
 ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1")
 CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS", "")
 
-VERSION_SGR = os.environ.get("SGR_VERSION", "v2.0.0-entrega2")
+VERSION_SGR = os.environ.get("SGR_VERSION", "v3.0.0-etapa3")
 
 INSTALLED_APPS = [
     "django.contrib.auth",

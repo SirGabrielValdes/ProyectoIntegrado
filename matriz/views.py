@@ -14,7 +14,7 @@ from cuentas.models import CARGOS, Usuario
 
 from . import semaforo
 from .models import Actividad, Ausencia, MetaTrimestre, Organizacion, Trimestre
-from .reglas import MAX_ACTIVIDADES_DIA, errores_de_fecha, limite_ingreso
+from .reglas import MAX_ACTIVIDADES_DIA, calcular_puntaje, errores_de_fecha, limite_ingreso
 
 EXTENSIONES_RESPALDO = (".pdf", ".jpg", ".jpeg", ".png")
 MAX_ARCHIVO = 5 * 1024 * 1024
@@ -369,7 +369,6 @@ class ActividadesMantenedor(Mantenedor):
         actividad.funcionario = form.funcionario
         actividad.registrado_por = request.user
         actividad.delegacion = request.delegacion_activa
-        from .reglas import calcular_puntaje
         actividad.puntaje, actividad.motivo_sin_puntaje = calcular_puntaje(actividad)
         actividad.save()
         if actividad.puntaje:

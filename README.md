@@ -1,19 +1,20 @@
 # SGR · Sistema de Gestión de Requerimientos
 
-**Proyecto Integrado · Ilustre Municipalidad de La Serena · Segunda evaluación**
+**Proyecto Integrado · Ilustre Municipalidad de La Serena · Etapa 3 (módulos transaccionales)**
 
 Aplicación web para el registro de la atención ciudadana en las delegaciones municipales de La Serena. Incluye:
 
 - acceso por usuario o correo, con recuperación de contraseña mediante un código de 6 dígitos;
 - seis mantenedores (CRUD);
 - ingreso de atenciones con catálogos dependientes y contexto de delegación;
-- permisos por rol, validados en el servidor.
+- permisos por rol, validados en el servidor;
+- **Etapa 3:** trimestres de evaluación con metas por cargo, matriz de actividades con las reglas de puntaje de la Coordinación de Delegaciones, ausencias que ajustan las metas, tubo de trabajo con evidencias fotográficas, tres dashboards con semáforo y una API REST para la app móvil.
 
 Todas las pantallas usan un mismo template con la identidad visual institucional (Rojo Heráldico `#C41230`).
 
 | | |
 |---|---|
-| **Versión de la entrega** | `v2.0.0-entrega2`. La misma versión aparece en el pie de cada pantalla y se fija con la etiqueta Git de la entrega |
+| **Versión de la entrega** | `v3.0.0-etapa3`. La misma versión aparece en el pie de cada pantalla y se fija con la etiqueta Git de la entrega |
 | **URL AWS** | `http://<IP-ELÁSTICA-O-DOMINIO>` ← *completar al desplegar (ver `docs/despliegue_aws.md`)* |
 | **Acceso de evaluación** | Usuarios de prueba en `docs/roles_y_permisos.md`. La contraseña se entrega al docente por un canal privado |
 
@@ -69,7 +70,8 @@ El script crea el entorno virtual, instala las dependencias, prepara la base de 
 | `superadmin` | `Serena.2026` | Superadministrador |
 | `coordinador` | `Serena.2026` | Coordinador |
 | `delegado` | `Serena.2026` | Delegado municipal |
-| `funcionario` | `Serena.2026` | Funcionario |
+| `funcionario` | `Serena.2026` | Funcionario (cargo Gestor Social) |
+| `apoyo`, `servicios`, `funcionario2`, `planificacion` | `Serena.2026` | Funcionarios con otros cargos (ver `docs/roles_y_permisos.md`) |
 
 Estas credenciales son de prueba. En AWS cámbielas con `SGR_CLAVE_DEMO`.
 
@@ -86,6 +88,15 @@ python manage.py runserver
 </details>
 
 No se necesita archivo `.env` para trabajar localmente: sin él, el proyecto usa modo desarrollo y SQLite. Sin `EMAIL_HOST`, el código de recuperación de contraseña se muestra en la terminal donde corre el servidor. Para recibirlo por correo, copie `.env.example` a `.env` y complete la sección de correo.
+
+## Etapa 3: documentación específica
+
+| Tema | Documento |
+|---|---|
+| Tablero Kanban (GitHub Projects) y tarjetas de la entrega | [`docs/kanban.md`](docs/kanban.md) |
+| Reglas de negocio de la matriz y su prueba | [`docs/reglas_matriz.md`](docs/reglas_matriz.md) |
+| API REST para la app móvil | [`docs/api_movil.md`](docs/api_movil.md) |
+| Roles, permisos y cargos | [`docs/roles_y_permisos.md`](docs/roles_y_permisos.md) |
 
 ## Configuración
 
@@ -117,11 +128,12 @@ Para actualizar después: `sudo bash /opt/sgr/app/deploy/actualizar.sh`. `GET /s
 
 ## Base de datos
 
-- **Migraciones:** `*/migrations/0001_initial.py` (`python manage.py migrate`).
+- **Migraciones:** `*/migrations/` (`python manage.py migrate`). Las de la Etapa 3 renumeran los códigos antiguos (`DEL01` → `DEL-00001`) y agregan los permisos nuevos a los roles existentes, por lo que una instalación en uso se actualiza sin perder datos.
 - **Script SQL de referencia (MySQL):** [`docs/bd/esquema_mysql.sql`](docs/bd/esquema_mysql.sql).
-- **Datos de prueba ficticios:** `python manage.py cargar_datos_demo [--atenciones N --vecinos N]`. Carga 7 delegaciones, 4 roles, 7 usuarios, 25 ítems, 6 tipos, 12 sub atenciones, vecinos y atenciones.
+- **Datos de prueba ficticios:** `python manage.py cargar_datos_demo [--atenciones N --vecinos N --actividades N]`. Carga 7 delegaciones, 4 roles, 10 usuarios con cargo, 12 ítems de la matriz (basados en el descriptor de funciones), tipos y sub atenciones, 12 organizaciones, el trimestre en curso (abierto) y el anterior con metas, 150 actividades, ausencias, 8 compromisos del tubo con fotos de evidencia, vecinos y atenciones.
+- **Códigos automáticos:** los asigna el sistema con prefijo y correlativo de 5 dígitos (`DEL-`, `ROL-`, `ITM-`, `TAT-`, `SAT-`, `ORG-`, `ARE-`, `TRI-`, `GES-`/`SOC-` para las actividades y `TUB-` para los compromisos).
 
-Modelo principal: `Delegacion`, `Rol` (permisos + alcance), `Usuario` (rol + delegaciones autorizadas), `Item`, `TipoAtencion`, `SubAtencion` (→ Tipo), `Vecino` (solicitante identificado por RUT), `Atencion` (vecino, tipo, sub atención, descripción, delegación, responsable, fecha) y `SolicitudRecuperacion` (código cifrado, vigencia, intentos y reenvíos).
+Modelo principal: `Delegacion`, `Rol` (permisos + alcance), `Usuario` (rol + delegaciones autorizadas), `Item`, `TipoAtencion`, `SubAtencion` (→ Tipo), `Vecino` (solicitante identificado por RUT), `Atencion` (vecino, tipo, sub atención, descripción, delegación, responsable, fecha) y `SolicitudRecuperacion` (código cifrado, vigencia, intentos y reenvíos). Etapa 3: `Trimestre`, `MetaTrimestre` (ítem × cargo), `Organizacion`, `Actividad` (puntaje y motivo), `Ausencia`, `AreaApoyo`, `Compromiso`, `HistorialCompromiso`, `Evidencia` y `TokenApi`.
 
 ## Roles y permisos
 
@@ -140,21 +152,30 @@ Leyenda: **Operativo** = funciona con persistencia real y está probado · **Sim
 | Envío del correo con el código | **Operativo** con SMTP configurado / **Simulado** sin `EMAIL_HOST` | Sin SMTP el correo se escribe en el log del servidor |
 | Validar código | **Operativo** | 6 dígitos; se puede pegar y navegar con el teclado; vigencia, intentos, reenvío con espera y código de un solo uso |
 | Crear nueva contraseña | **Operativo** | Solo tras una verificación válida; política visible; invalida el código usado |
-| CRUD Delegaciones, Roles, Usuarios, Ítems y metas, Tipo de Atención, Sub Atención | **Operativo** | Crear, consultar, listar, editar, eliminar y activar/desactivar, con reglas de integridad |
-| Búsqueda, filtros, paginador y Exportar a Excel (6 mantenedores + Atenciones) | **Operativo** | La exportación usa el filtro aplicado en todas sus páginas, sin datos sensibles |
+| CRUD Delegaciones, Roles, Usuarios, Ítems y metas, Tipo de Atención, Sub Atención | **Operativo** | Crear, consultar, listar, editar, eliminar y activar/desactivar, con reglas de integridad. Código automático, no editable |
+| Usuarios nuevos | **Operativo** | Clave provisoria enviada por correo y cambio obligatorio en el primer ingreso; botón «Reenviar clave provisoria» |
+| Búsqueda, filtros, paginador y Exportar a Excel | **Operativo** | Filtrado mientras se escribe (sin botón Buscar), selector de 10/20/50/100 filas y exportación del filtro completo sin datos sensibles |
+| Trimestres y metas | **Operativo** | Abrir, configurar y cerrar trimestres (solo uno abierto); grilla de metas por ítem y cargo |
+| JJVV y organizaciones | **Operativo** | Juntas de vecinos y organizaciones funcionales por delegación |
+| Matriz de actividades | **Operativo** | Reglas del correo de la Coordinación: nombre y teléfono, delegado como usuario, coordinaciones, 7 por día, cierre semanal y felicitaciones (ver `docs/reglas_matriz.md`) |
+| Ausencias (pestaña del semáforo) | **Operativo** | Las ingresa el delegado y ajustan la meta automáticamente |
+| Dashboards general, por delegación y por funcionario | **Operativo** | Cumplimiento automático con tope de 120 % por ítem y semáforo verde/amarillo/rojo |
+| Tubo de trabajo | **Operativo** | Tablero Ingresados → Pendientes → En proceso → Realizados, historial, áreas de apoyo e indicadores. Se deriva desde actividades y atenciones |
+| Evidencias fotográficas | **Operativo** | Carga desde la web o la app; el delegado aprueba o rechaza; «Realizado» exige una evidencia aprobada |
+| API REST para la app móvil | **Operativo** (API) / **Pendiente** (app) | Token, listado de compromisos y carga de fotos (`docs/api_movil.md`). La app móvil es otro proyecto |
 | Ingreso de atención | **Operativo** | Vecino existente o nuevo (RUT validado), Tipo → Sub Atención dependiente, delegación, responsable y fecha automáticos, folio, sin doble envío |
 | Listado y consulta de atenciones | **Operativo** | Alcance por delegación activa |
 | Roles, permisos y contexto de delegación | **Operativo** | Validados en el servidor |
 | Vecinos (mantenedor completo) | **Pendiente** (plantilla) | El solicitante sí se registra desde el ingreso de atención |
-| Tipo de Gestión, Seguimiento, Reportes, Auditoría | **Pendiente** (plantilla) | Navegación y visualización por rol. Sus botones informan «función pendiente» y no simulan éxito |
+| Tipo de Gestión, Reportes, Auditoría | **Pendiente** (plantilla) | Navegación y visualización por rol. Sus botones informan «función pendiente» y no simulan éxito |
 
 ## Pruebas
 
 | Tipo | Comando | Resultado | Evidencia |
 |---|---|---|---|
-| Funcionales (71 casos: acceso, recuperación, 6 CRUD, listados, exportación, perfiles, delegación, atención, SweetAlert2) | `python manage.py test tests` | 71/71 en SQLite y MariaDB | — |
+| Funcionales (105 casos: acceso, recuperación, 6 CRUD, listados, perfiles, delegación, atención y 34 de la Etapa 3: correcciones, matriz, reglas, semáforo, tubo, evidencias y API) | `python manage.py test tests` | 105/105 en SQLite y MariaDB | — |
 | Matriz de pruebas funcionales | `python pruebas/generar_matriz.py --responsable "Nombre"` | Genera la matriz | [`docs/pruebas/matriz_pruebas_funcionales.xlsx`](docs/pruebas/matriz_pruebas_funcionales.xlsx) / [`.md`](docs/pruebas/matriz_pruebas_funcionales.md) |
-| Interfaz en navegador (12 casos, SweetAlert2 y JavaScript) | `python pruebas/e2e/pruebas_interfaz.py --url <url> --log <log-servidor>` | 12/12 | [`docs/pruebas/resultados_interfaz.md`](docs/pruebas/resultados_interfaz.md), capturas en [`docs/evidencias/`](docs/evidencias/) |
+| Interfaz en navegador (15 casos: SweetAlert2, búsqueda en vivo, clave provisoria, matriz, tubo y dashboards) | `python pruebas/e2e/pruebas_interfaz.py --url <url> --log <log-servidor>` | 15/15 | [`docs/pruebas/resultados_interfaz.md`](docs/pruebas/resultados_interfaz.md), capturas en [`docs/evidencias/`](docs/evidencias/) |
 | Estrés (Locust, carga progresiva) | ver [`docs/pruebas/plan_pruebas_estres.md`](docs/pruebas/plan_pruebas_estres.md) | Ensayo local ejecutado; **AWS pendiente** | [`docs/pruebas/estres/`](docs/pruebas/estres/) |
 
 Cada caso funcional registra requisito, módulo, precondiciones, pasos, resultado esperado y obtenido, estado, evidencia, responsable y fecha. Los defectos encontrados y su re-prueba están en el registro de defectos de `plan_pruebas_estres.md`. Las pruebas que dependen de AWS quedan como **pendientes justificadas**, no como aprobadas.
@@ -169,6 +190,8 @@ core/           template, permisos, contexto de delegación, base CRUD, exportac
 cuentas/        usuarios, roles, login y recuperación de contraseña
 catalogos/      delegaciones, ítems y metas, tipos y sub atenciones
 atenciones/     vecinos e ingreso/consulta de atenciones
+matriz/         trimestres, metas, organizaciones, actividades, reglas de puntaje, ausencias, semáforo y dashboards
+tubo/           tubo de trabajo, evidencias fotográficas, áreas de apoyo y API REST para la app móvil
 templates/      pantallas (base institucional, acceso, CRUD, atención, errores)
 static/         CSS institucional, JS (SweetAlert2, código, atención), logo y fuentes
 tests/          pruebas funcionales automatizadas
@@ -182,7 +205,7 @@ docs/           despliegue, roles, normas gráficas, BD, resultados y evidencias
 Para fijar la versión entregada:
 
 ```bash
-git tag -a entrega-2 -m "Segunda evaluación SGR" && git push origin entrega-2
+git tag -a entrega-3 -m "Etapa 3 SGR" && git push origin entrega-3
 ```
 
 y despliegue esa etiqueta en AWS con `actualizar.sh entrega-2`.
