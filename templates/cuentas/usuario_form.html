@@ -1,15 +1,18 @@
 {% extends "crud/form.html" %}
+{% load sgr %}
 {% block campos %}
 <div class="form-grilla">
   {% include "crud/_campo.html" with campo=form.nombre %}
   {% include "crud/_campo.html" with campo=form.username %}
   {% include "crud/_campo.html" with campo=form.correo %}
   {% include "crud/_campo.html" with campo=form.rol %}
+  {% include "crud/_campo.html" with campo=form.cargo %}
   {% include "crud/_campo.html" with campo=form.delegaciones %}
-  {% include "crud/_campo.html" with campo=form.clave1 %}
-  {% include "crud/_campo.html" with campo=form.clave2 %}
   {% include "crud/_campo.html" with campo=form.is_active %}
 </div>
-<p class="ayuda">La contraseña debe tener entre 8 y 64 caracteres, con mayúscula, minúscula, número y carácter especial.
-  Solo se listan las delegaciones y roles que su perfil puede asignar.</p>
+{% if creando %}
+<p class="registro-automatico" style="margin-top:14px">{% icono "correo" "icono-sm" %}
+  <span>El sistema generará una <strong>clave provisoria</strong> y la enviará al correo indicado. El usuario deberá cambiarla en su primer ingreso.</span></p>
+{% endif %}
+<p class="ayuda">El cargo define las metas del funcionario en la matriz SGR. Solo se listan las delegaciones y roles que su perfil puede asignar.</p>
 {% endblock %}

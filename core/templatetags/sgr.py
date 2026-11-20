@@ -58,3 +58,19 @@ def estado(texto):
 def url_pagina(context, numero):
     parametros = context.get("parametros", "")
     return f"?{parametros}&pagina={numero}" if parametros else f"?pagina={numero}"
+
+
+@register.filter
+def porcentaje(valor):
+    """0.857 -> «86 %». Sin valor: «—»."""
+    if valor is None or valor == "":
+        return "—"
+    return f"{valor * 100:.0f} %"
+
+
+@register.filter
+def ancho_barra(valor):
+    """Ancho de la barra de cumplimiento: el 120 % (tope) llena la barra."""
+    if not valor:
+        return 0
+    return f"{min(valor / 1.2 * 100, 100):.1f}"

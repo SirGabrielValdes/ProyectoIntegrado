@@ -7,6 +7,7 @@ El script pruebas/generar_matriz.py usa ese texto para construir la matriz
 de pruebas funcionales (requisito, módulo, precondiciones, pasos, esperado,
 obtenido, estado, evidencia, responsable y fecha).
 """
+import tempfile
 from io import StringIO
 
 from django.contrib.messages import get_messages
@@ -24,14 +25,16 @@ CLAVE = "Serena.2026"
     EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",
     CACHES={"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}},
     PASSWORD_HASHERS=["django.contrib.auth.hashers.MD5PasswordHasher"],
+    MEDIA_ROOT=tempfile.mkdtemp(prefix="sgr-pruebas-"),
 )
 class PruebaSGR(TestCase):
     @classmethod
     def setUpTestData(cls):
-        call_command("cargar_datos_demo", atenciones=0, vecinos=5, stdout=StringIO())
-        cls.del01 = Delegacion.objects.get(codigo="DEL01")
-        cls.del02 = Delegacion.objects.get(codigo="DEL02")
-        cls.del04 = Delegacion.objects.get(codigo="DEL04")
+        call_command("cargar_datos_demo", atenciones=0, vecinos=5, sin_transacciones=True, stdout=StringIO())
+        cls.del01 = Delegacion.objects.get(nombre="Delegación Centro")
+        cls.del02 = Delegacion.objects.get(nombre="Delegación Las Compañías")
+        cls.del04 = Delegacion.objects.get(nombre="Delegación La Pampa")
+        cls.del05 = Delegacion.objects.get(nombre="Delegación Avenida del Mar")
 
     def setUp(self):
         cache.clear()

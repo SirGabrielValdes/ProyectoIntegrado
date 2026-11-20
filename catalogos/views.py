@@ -2,15 +2,23 @@ from django import forms
 
 from core.crud import Columna, Filtro, FormularioBase, Mantenedor, filtro_estado
 
-from .models import Delegacion, Item, SubAtencion, TipoAtencion
+from .models import COMUNA_POR_DEFECTO, Delegacion, Item, SubAtencion, TipoAtencion
 
 
 # --- Delegaciones ------------------------------------------------------------
 class DelegacionForm(FormularioBase):
     class Meta:
         model = Delegacion
-        fields = ["codigo", "nombre", "direccion", "comuna", "activo"]
+        fields = ["nombre", "direccion", "comuna", "activo"]
         labels = {"activo": "Activa"}
+
+    unicos = {"nombre": "Ya existe una delegación con este nombre."}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not self.instance.pk:
+            self.initial.setdefault("comuna", COMUNA_POR_DEFECTO)
+        self.fields["comuna"].help_text = "Por defecto, La Serena."
 
     def clean(self):
         datos = super().clean()
@@ -50,10 +58,13 @@ class DelegacionesMantenedor(Mantenedor):
         return request.user.delegaciones.all()
 
     def motivo_no_eliminar(self, request, obj):
-        usuarios, atenciones = obj.usuarios.count(), obj.atenciones.count()
-        if usuarios or atenciones:
-            return (f"No se puede eliminar «{obj}»: tiene {usuarios} usuario(s) y {atenciones} atención(es) "
-                    "asociados. Puede desactivarla en su lugar.")
+        relaciones = [(obj.usuarios.count(), "usuario(s)"), (obj.atenciones.count(), "atención(es)"),
+                      (obj.organizaciones.count(), "organización(es)"), (obj.actividades.count(), "actividad(es)"),
+                      (obj.compromisos.count(), "compromiso(s)")]
+        presentes = [f"{n} {texto}" for n, texto in relaciones if n]
+        if presentes:
+            return (f"No se puede eliminar «{obj}»: tiene {', '.join(presentes)} asociados. "
+                    "Puede desactivarla en su lugar.")
         if request.delegacion_activa == obj:
             return "No puede eliminar su delegación activa."
         return None
@@ -68,41 +79,56 @@ class DelegacionesMantenedor(Mantenedor):
 class ItemForm(FormularioBase):
     class Meta:
         model = Item
-        fields = ["codigo", "nombre", "descripcion", "activo"]
+        fields = ["nombre", "descripcion", "ambito", "es_felicitacion", "activo"]
         widgets = {"descripcion": forms.Textarea}
         labels = {"activo": "Activo"}
+
+    unicos = {"nombre": "Ya existe un ítem con este nombre."}
 
 
 class ItemsMantenedor(Mantenedor):
     modulo = "items"
     model = Item
     form_class = ItemForm
-    titulo = "Ítems y metas"
+    titulo = "Ítems de la matriz"
     singular = "ítem"
     campos_busqueda = ["codigo", "nombre", "descripcion"]
     columnas = [
         Columna("Código", "codigo", "enlace"),
         Columna("Nombre", "nombre"),
-        Columna("Descripción", lambda i: (i.descripcion[:70] + "…") if len(i.descripcion) > 70 else i.descripcion),
+        Columna("Ámbito", lambda i: i.get_ambito_display()),
+        Columna("Felicitaciones", lambda i: "Sí (solo delegado)" if i.es_felicitacion else "No"),
         Columna("Estado", "estado_texto", "estado"),
     ]
     columnas_excel = [("Código", "codigo"), ("Nombre", "nombre"), ("Descripción", "descripcion"),
-                      ("Estado", "estado_texto")]
-    detalle = [("Código", "codigo"), ("Nombre", "nombre"), ("Descripción", "descripcion")]
-    filtros = [filtro_estado()]
+                      ("Ámbito", lambda i: i.get_ambito_display()),
+                      ("Felicitaciones", lambda i: "Sí" if i.es_felicitacion else "No"), ("Estado", "estado_texto")]
+    detalle = [("Código", "codigo"), ("Nombre", "nombre"), ("Descripción", "descripcion"),
+               ("Ámbito (prefijo de sus actividades)", lambda i: f"{i.get_ambito_display()} ({i.ambito})"),
+               ("Ítem de felicitaciones", lambda i: "Sí: solo lo registra el delegado, con respaldo formal"
+                if i.es_felicitacion else "No"),
+               ("Actividades registradas", lambda i: i.actividades.count())]
+    filtros = [Filtro("ambito", "Ámbito", lambda r: Item.AMBITOS, lambda qs, v: qs.filter(ambito=v)),
+               filtro_estado()]
     placeholder_busqueda = "Buscar por código, nombre o descripción…"
+
+    def motivo_no_eliminar(self, request, obj):
+        n, metas = obj.actividades.count(), obj.metas.count()
+        if n or metas:
+            return (f"No se puede eliminar «{obj}»: tiene {n} actividad(es) y {metas} meta(s) asociadas. "
+                    "Puede desactivarlo.")
+        return None
 
 
 # --- Tipo de Atención --------------------------------------------------------
 class TipoAtencionForm(FormularioBase):
     class Meta:
         model = TipoAtencion
-        fields = ["codigo", "nombre", "descripcion", "activo"]
+        fields = ["nombre", "descripcion", "activo"]
         widgets = {"descripcion": forms.Textarea}
         labels = {"activo": "Activo"}
 
-    unicos = {"codigo": "Ya existe un registro con este código.",
-              "nombre": "Ya existe un tipo de atención con este nombre."}
+    unicos = {"nombre": "Ya existe un tipo de atención con este nombre."}
 
     def clean(self):
         datos = super().clean()
@@ -153,7 +179,7 @@ class TiposMantenedor(Mantenedor):
 class SubAtencionForm(FormularioBase):
     class Meta:
         model = SubAtencion
-        fields = ["codigo", "nombre", "tipo", "activo"]
+        fields = ["nombre", "tipo", "activo"]
         labels = {"activo": "Activa"}
 
     def __init__(self, *args, **kwargs):

@@ -1,0 +1,44 @@
+{% extends "crud/form.html" %}
+{% load sgr %}
+{% block campos %}
+{% if trimestre_abierto %}
+<div class="alerta alerta-neutra">{% icono "info" %}<span>Trimestre abierto: <strong>{{ trimestre_abierto.nombre }}</strong> ({{ trimestre_abierto.inicio|date:"d-m-Y" }} al {{ trimestre_abierto.fin|date:"d-m-Y" }}).
+  Máximo 7 actividades por día, solo de lunes a viernes; la semana se cierra el lunes siguiente.
+  Suman punto las <strong>acciones ejecutadas</strong> con nombre y teléfono del vecino o usuario.</span></div>
+{% else %}
+<div class="alerta" role="alert">{% icono "alerta" %}<span>No hay un trimestre abierto: no se pueden registrar actividades.</span></div>
+{% endif %}
+<div class="form-grilla" data-actividad data-felicitaciones="{{ form.items_felicitacion|join:',' }}">
+  {% include "crud/_campo.html" with campo=form.item %}
+  {% include "crud/_campo.html" with campo=form.fecha %}
+  {% include "crud/_campo.html" with campo=form.tipo_registro completo=True %}
+  {% include "crud/_campo.html" with campo=form.solicitante_tipo completo=True %}
+  <div data-bloque-organizacion class="completo">{% include "crud/_campo.html" with campo=form.organizacion %}</div>
+  {% include "crud/_campo.html" with campo=form.nombre_contacto %}
+  {% include "crud/_campo.html" with campo=form.telefono_contacto %}
+  {% include "crud/_campo.html" with campo=form.descripcion %}
+  <div data-bloque-felicitacion>{% include "crud/_campo.html" with campo=form.destinatario %}</div>
+  <div data-bloque-felicitacion>{% include "crud/_campo.html" with campo=form.respaldo %}</div>
+</div>
+<p class="registro-automatico" style="margin-top:14px">{% icono "candado" "icono-sm" %}
+  <span>Funcionario: <strong>{{ user.nombre }}</strong> · Delegación: {{ delegacion_activa.codigo }} · El código (GES o SOC) y el puntaje se calculan automáticamente.</span></p>
+{% endblock %}
+{% block scripts %}
+<script>
+(function () {
+  var g = document.querySelector("[data-actividad]");
+  if (!g) return;
+  var fel = (g.dataset.felicitaciones || "").split(",").filter(Boolean);
+  var item = document.getElementById("id_item");
+  function actualizar() {
+    var esFel = fel.indexOf(item.value) >= 0;
+    document.querySelectorAll("[data-bloque-felicitacion]").forEach(function (b) { b.hidden = !esFel; });
+    var sol = document.querySelector('input[name="solicitante_tipo"]:checked');
+    document.querySelector("[data-bloque-organizacion]").hidden = !(sol && sol.value === "ORGANIZACION");
+  }
+  item.addEventListener("change", actualizar);
+  document.querySelectorAll('input[name="solicitante_tipo"]').forEach(function (r) { r.addEventListener("change", actualizar); });
+  actualizar();
+})();
+</script>
+{% endblock %}

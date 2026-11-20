@@ -10,6 +10,8 @@
       {% csrf_token %}<input type="hidden" name="volver" value="{{ parametros }}">
       <button class="enlace-accion neutro" type="submit">{% if fila.activo %}Desactivar{% else %}Activar{% endif %}</button>
     </form>
+  {% endif %}
+  {% if puede_eliminar %}
     <form method="post" action="{% url modulo|add:':eliminar' fila.obj.pk %}"
           data-confirmar="¿Eliminar «{{ fila.obj }}»? Esta acción no se puede deshacer."
           data-confirmar-titulo="Eliminar registro" data-confirmar-boton="Eliminar" data-cancelado="El registro no fue eliminado.">

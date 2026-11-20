@@ -5,6 +5,9 @@ from catalogos.views import delegaciones, items, subatenciones, tipos
 from core import views as core
 from cuentas import views as cuentas
 from cuentas.views import roles, usuarios
+from matriz import views as matriz
+from tubo import api
+from tubo.views import areas, compromisos
 
 urls_cuentas = ([
     path("ingresar/", cuentas.ingresar, name="login"),
@@ -13,6 +16,7 @@ urls_cuentas = ([
     path("recuperar/validar/", cuentas.validar_codigo, name="validar_codigo"),
     path("recuperar/reenviar/", cuentas.reenviar_codigo, name="reenviar_codigo"),
     path("recuperar/nueva-clave/", cuentas.nueva_clave, name="nueva_clave"),
+    path("cambiar-clave/", cuentas.cambiar_clave, name="cambiar_clave"),
 ], "cuentas")
 
 urls_core = ([
@@ -32,6 +36,18 @@ urlpatterns = [
     path("tipos-atencion/", include(tipos.urls())),
     path("sub-atenciones/", include(subatenciones.urls())),
     path("atenciones/", include(atenciones.urls())),
+    path("trimestres/", include(matriz.trimestres.urls())),
+    path("organizaciones/", include(matriz.organizaciones.urls())),
+    path("actividades/", include(matriz.actividades.urls())),
+    path("ausencias/", include(matriz.ausencias.urls())),
+    path("tubo/", include(compromisos.urls())),
+    path("areas-apoyo/", include(areas.urls())),
+    path("dashboard/", include(([
+        path("general/", matriz.dashboard_general, name="general"),
+        path("delegacion/", matriz.dashboard_delegacion, name="delegacion"),
+        path("funcionario/", matriz.dashboard_funcionario, name="funcionario"),
+    ], "dashboard"))),
+    path("api/v1/", include(api.urlpatterns)),
 ]
 
 handler403 = "core.views.error_403"

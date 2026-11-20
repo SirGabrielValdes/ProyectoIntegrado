@@ -99,24 +99,25 @@
   }
 
   // --- 4. Confirmaciones (eliminar, desactivar, cerrar sesión) ---------------
-  document.querySelectorAll("form[data-confirmar]").forEach(function (f) {
-    f.addEventListener("submit", function (e) {
-      if (f.dataset.confirmado === "1" || !Alerta) return;
-      e.preventDefault();
-      Alerta.fire({
-        icon: f.dataset.confirmarIcono || "warning",
-        title: f.dataset.confirmarTitulo || "Confirmar acción",
-        text: f.dataset.confirmar,
-        showCancelButton: true,
-        confirmButtonText: f.dataset.confirmarBoton || "Confirmar"
-      }).then(function (r) {
-        if (r.isConfirmed) {
-          f.dataset.confirmado = "1";
-          f.requestSubmit ? f.requestSubmit() : f.submit();
-        } else if (r.dismiss === Swal.DismissReason.cancel && f.dataset.cancelado) {
-          Alerta.fire({ icon: "info", title: "Operación cancelada", text: f.dataset.cancelado, timer: 2200 });
-        }
-      });
+  // Delegado en el documento: también aplica a filas cargadas por la búsqueda en vivo.
+  document.addEventListener("submit", function (e) {
+    var f = e.target;
+    if (!f.matches || !f.matches("form[data-confirmar]")) return;
+    if (f.dataset.confirmado === "1" || !Alerta) return;
+    e.preventDefault();
+    Alerta.fire({
+      icon: f.dataset.confirmarIcono || "warning",
+      title: f.dataset.confirmarTitulo || "Confirmar acción",
+      text: f.dataset.confirmar,
+      showCancelButton: true,
+      confirmButtonText: f.dataset.confirmarBoton || "Confirmar"
+    }).then(function (r) {
+      if (r.isConfirmed) {
+        f.dataset.confirmado = "1";
+        f.requestSubmit ? f.requestSubmit() : f.submit();
+      } else if (r.dismiss === Swal.DismissReason.cancel && f.dataset.cancelado) {
+        Alerta.fire({ icon: "info", title: "Operación cancelada", text: f.dataset.cancelado, timer: 2200 });
+      }
     });
   });
 
@@ -150,19 +151,47 @@
     }, true);
   });
 
-  // --- 6. Búsqueda: estado de carga y filtros --------------------------------
+  // --- 6. Búsqueda en vivo, filtros y filas por página -------------------------
   document.querySelectorAll("form[data-busqueda]").forEach(function (f) {
-    f.addEventListener("submit", function () {
-      var t = document.querySelector(".tabla-contenedor"); if (t) t.classList.add("cargando");
+    var contenedor = document.querySelector("[data-resultados]");
+    var tabla = function () { return document.querySelector(".tabla-contenedor"); };
+    var exportar = f.querySelector("a[data-url-exportar]");
+    var temporizador = null, ultima = null;
+
+    function actualizar() {
+      var params = new URLSearchParams(new FormData(f));
+      params.delete("pagina");
+      var consulta = params.toString();
+      if (consulta === ultima) return;
+      ultima = consulta;
+      var t = tabla(); if (t) t.classList.add("cargando");
+      fetch(window.location.pathname + (consulta ? "?" + consulta : ""), { headers: { "X-Requested-With": "fetch" } })
+        .then(function (r) { if (!r.ok) throw new Error(r.status); return r.text(); })
+        .then(function (html) {
+          if (consulta !== ultima) return;  // llegó una respuesta antigua
+          contenedor.innerHTML = html;
+          history.replaceState(null, "", window.location.pathname + (consulta ? "?" + consulta : ""));
+          var meta = contenedor.querySelector("[data-total]");
+          if (exportar && meta) {
+            exportar.href = exportar.dataset.urlExportar + (meta.dataset.parametros ? "?" + meta.dataset.parametros : "");
+            exportar.dataset.exportar = "Se exportarán " + meta.dataset.total + " registro(s) del filtro aplicado.";
+          }
+        })
+        .catch(function () {
+          var t2 = tabla(); if (t2) t2.classList.remove("cargando");
+          if (Alerta) Alerta.fire({ icon: "error", title: "Error de servidor", text: "No fue posible actualizar el listado. Intente nuevamente." });
+        });
+    }
+    if (!contenedor) return;
+    f.addEventListener("submit", function (e) { e.preventDefault(); clearTimeout(temporizador); actualizar(); });
+    f.querySelectorAll("input[type=search]").forEach(function (i) {
+      i.addEventListener("input", function () { clearTimeout(temporizador); temporizador = setTimeout(actualizar, 350); });
     });
-    f.querySelectorAll("select").forEach(function (s) {
-      s.addEventListener("change", function () { f.requestSubmit ? f.requestSubmit() : f.submit(); });
-    });
+    f.querySelectorAll("select").forEach(function (s) { s.addEventListener("change", actualizar); });
   });
-  document.querySelectorAll(".paginador a").forEach(function (a) {
-    a.addEventListener("click", function () {
-      var t = document.querySelector(".tabla-contenedor"); if (t) t.classList.add("cargando");
-    });
+  document.addEventListener("click", function (e) {
+    var a = e.target.closest && e.target.closest(".paginador a");
+    if (a) { var t = document.querySelector(".tabla-contenedor"); if (t) t.classList.add("cargando"); }
   });
   document.querySelectorAll("a[data-exportar]").forEach(function (a) {
     a.addEventListener("click", function () {

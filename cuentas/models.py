@@ -8,18 +8,19 @@ from django.db import models
 from django.utils import timezone
 
 from catalogos.models import Delegacion
+from core.codigos import CodigoAutomatico
 from core.permisos import TODOS_LOS_PERMISOS
-from core.validadores import validar_codigo
 
 
-class Rol(models.Model):
+class Rol(CodigoAutomatico):
+    PREFIJO = "ROL"
     ALCANCES = [
         ("GLOBAL", "Global (todas las delegaciones)"),
         ("MULTIPLE", "Varias delegaciones autorizadas"),
         ("DELEGACION", "Una delegación"),
     ]
 
-    codigo = models.CharField("Código", max_length=15, unique=True, validators=[validar_codigo])
+    codigo = models.CharField("Código", max_length=15, unique=True, blank=True, editable=False)
     nombre = models.CharField("Nombre", max_length=60, unique=True)
     descripcion = models.TextField("Descripción", max_length=300, blank=True)
     permisos = models.JSONField("Permisos", default=list, blank=True)
@@ -39,10 +40,6 @@ class Rol(models.Model):
 
     def __str__(self):
         return self.nombre
-
-    def save(self, *args, **kwargs):
-        self.codigo = (self.codigo or "").strip().upper()
-        super().save(*args, **kwargs)
 
     @property
     def estado_texto(self):
@@ -66,6 +63,18 @@ class UsuarioManager(BaseUserManager):
         return usuario
 
 
+# Cargos del «Descriptor de funciones para los cargos de las Delegaciones» (2026).
+CARGOS = [
+    ("DELEGADO", "Delegado"),
+    ("GESTOR_SOCIAL", "Gestor Social"),
+    ("APOYO_ADMINISTRATIVO", "Apoyo Administrativo"),
+    ("ORGANIZACIONES", "Organizaciones Comunitarias"),
+    ("COMPRAS_PROYECTOS", "Gestor de Compras y Proyectos"),
+    ("GESTION_PLANIFICACION", "Gestión y Planificación"),
+    ("SERVICIOS_COMUNITARIOS", "Coordinador de Servicios Comunitarios"),
+]
+
+
 class Usuario(AbstractBaseUser):
     username = models.CharField("Usuario", max_length=30, unique=True)
     correo = models.EmailField("Correo", max_length=120, unique=True)
@@ -74,7 +83,12 @@ class Usuario(AbstractBaseUser):
     delegaciones = models.ManyToManyField(
         Delegacion, blank=True, related_name="usuarios", verbose_name="Delegaciones autorizadas"
     )
+    cargo = models.CharField("Cargo", max_length=30, choices=CARGOS, blank=True,
+                             help_text="Cargo en la delegación según el descriptor de funciones; define sus metas.")
     is_active = models.BooleanField("Estado", default=True)
+    debe_cambiar_clave = models.BooleanField(
+        "Debe cambiar la clave", default=False,
+        help_text="Tiene una clave provisoria y debe cambiarla en su próximo ingreso.")
     creado = models.DateTimeField(auto_now_add=True)
     actualizado = models.DateTimeField(auto_now=True)
 

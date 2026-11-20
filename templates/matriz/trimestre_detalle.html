@@ -1,0 +1,19 @@
+{% extends "crud/detalle.html" %}
+{% load sgr %}
+{% block acciones_detalle %}
+  {{ block.super }}
+  {% if puede_editar %}<a class="btn btn-secundario" href="{% url 'trimestres:metas' obj.pk %}">{% icono "meta" "icono-sm" %}Configurar metas</a>{% endif %}
+{% endblock %}
+{% block extra_detalle %}
+<h2 style="margin-top:22px">Metas del trimestre por ítem y cargo</h2>
+{% if metas %}
+<div class="tabla-contenedor">
+  <table class="tabla">
+    <thead><tr><th scope="col">Ítem</th><th scope="col">Cargo</th><th scope="col">Meta (actividades)</th></tr></thead>
+    <tbody>{% for m in metas %}<tr><td>{{ m.item.codigo }} · {{ m.item.nombre }}</td><td>{{ m.get_cargo_display }}</td><td>{{ m.cantidad }}</td></tr>{% endfor %}</tbody>
+  </table>
+</div>
+{% else %}
+<div class="vacio">{% icono "meta" %}<strong>Sin metas definidas</strong>{% if puede_editar %}Use «Configurar metas» para asignar la meta de cada ítem por cargo.{% endif %}</div>
+{% endif %}
+{% endblock %}

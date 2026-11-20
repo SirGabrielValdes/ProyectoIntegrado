@@ -33,6 +33,7 @@ from .permisos import NOMBRE_MODULO, requiere_permiso
 log = logging.getLogger("sgr")
 
 ROJO_HERALDICO = "C41230"
+FILAS_OPCIONES = (10, 20, 50, 100)
 
 
 def obtener_valor(obj, accesor):
@@ -73,7 +74,7 @@ def filtro_estado(campo="activo", femenino=False):
 class FormularioBase(forms.ModelForm):
     """Normaliza textos, valida duplicados sin distinguir mayúsculas y aplica estilos."""
 
-    unicos = {"codigo": "Ya existe un registro con este código."}
+    unicos = {}
     minimos = {"nombre": 3}
 
     def __init__(self, *args, request=None, **kwargs):
@@ -96,19 +97,12 @@ class FormularioBase(forms.ModelForm):
                 widget.attrs.setdefault("minlength", self.minimos[nombre])
             if isinstance(widget, forms.Textarea):
                 widget.attrs.setdefault("rows", 3)
-        if "codigo" in self.fields:
-            self.fields["codigo"].widget.attrs.update(
-                {"pattern": "[A-Za-z0-9][A-Za-z0-9-]{1,14}", "style": "text-transform:uppercase",
-                 "placeholder": "Ej.: COD01"}
-            )
 
     def clean(self):
         datos = super().clean()
         for nombre, valor in list(datos.items()):
             if isinstance(valor, str) and not nombre.startswith("clave"):
                 datos[nombre] = " ".join(valor.split()) if nombre != "descripcion" else valor.strip()
-        if datos.get("codigo"):
-            datos["codigo"] = datos["codigo"].upper()
         for nombre, minimo in self.minimos.items():
             valor = datos.get(nombre)
             if isinstance(valor, str) and valor and len(valor) < minimo:
@@ -144,6 +138,7 @@ class Mantenedor:
     detalle: list = []
     filtros: list = []
     campo_estado = "activo"
+    permite_editar = True
     por_pagina = 10
     plantilla_lista = "crud/lista.html"
     plantilla_form = "crud/form.html"
@@ -226,7 +221,7 @@ class Mantenedor:
             "singular": self.singular,
             "nuevo_texto": ("Nueva " if self.femenino else "Nuevo ") + self.singular,
             "puede_crear": request.user.tiene_permiso(f"{self.modulo}.crear"),
-            "puede_editar": request.user.tiene_permiso(f"{self.modulo}.editar"),
+            "puede_editar": self.permite_editar and request.user.tiene_permiso(f"{self.modulo}.editar"),
             "puede_eliminar": request.user.tiene_permiso(f"{self.modulo}.eliminar"),
             "puede_exportar": request.user.tiene_permiso(f"{self.modulo}.exportar"),
         }
@@ -234,9 +229,14 @@ class Mantenedor:
         return ctx
 
     # --- Vistas -----------------------------------------------------------
+    def filas_por_pagina(self, request):
+        valor = request.GET.get("filas", "")
+        return int(valor) if valor.isdigit() and int(valor) in FILAS_OPCIONES else self.por_pagina
+
     def vista_lista(self, request):
         qs, q, valores = self.filtrar(request)
-        paginador = Paginator(qs, self.por_pagina)
+        filas_pagina = self.filas_por_pagina(request)
+        paginador = Paginator(qs, filas_pagina)
         pagina = paginador.get_page(request.GET.get("pagina"))
         parametros = request.GET.copy()
         parametros.pop("pagina", None)
@@ -256,8 +256,13 @@ class Mantenedor:
             filtrado=bool(q or valores),
             parametros=parametros.urlencode(),
             columnas=self.columnas,
+            filas_opciones=FILAS_OPCIONES,
+            filas_pagina=filas_pagina,
         )
         ctx.update(self.contexto_extra(request))
+        # Búsqueda en vivo: el navegador pide solo la tabla actualizada.
+        if request.headers.get("X-Requested-With") == "fetch":
+            return render(request, "crud/_resultados.html", ctx)
         return render(request, self.plantilla_lista, ctx)
 
     def vista_detalle(self, request, pk):
@@ -273,7 +278,9 @@ class Mantenedor:
 
     def _formulario(self, request, obj=None):
         creando = obj is None
-        form = self.form_class(request.POST if request.method == "POST" else None, instance=obj, **self.form_kwargs(request, obj))
+        enviado = request.method == "POST"
+        form = self.form_class(request.POST if enviado else None, request.FILES if enviado else None,
+                               instance=obj, **self.form_kwargs(request, obj))
         if request.method == "POST":
             if form.is_valid():
                 try:

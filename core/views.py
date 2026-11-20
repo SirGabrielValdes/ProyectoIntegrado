@@ -25,12 +25,6 @@ PENDIENTES = {
         "columnas": ["Código", "Nombre", "Plazo (días)", "Estado"],
         "filas": [["GES01", "Derivación interna", "5", "Activo"], ["GES02", "Visita a terreno", "10", "Activo"]],
     },
-    "seguimiento": {
-        "descripcion": "Seguimiento del ciclo de vida de las atenciones: derivaciones, gestiones y cierre.",
-        "columnas": ["Folio", "Vecino", "Gestión", "Estado", "Plazo"],
-        "filas": [["AT-2026-000001", "Vecina de ejemplo", "Derivación interna", "En curso", "3 días"],
-                  ["AT-2026-000002", "Vecino de ejemplo", "Visita a terreno", "Pendiente", "8 días"]],
-    },
     "reportes": {
         "descripcion": "Reportes de gestión por delegación, tipo de atención y período.",
         "columnas": ["Reporte", "Período", "Delegación", "Formato"],
@@ -104,6 +98,8 @@ def cambiar_delegacion(request):
     siguiente = request.POST.get("siguiente", "")
     try:
         coincidencia = resolve(siguiente)
+        if coincidencia.namespace == "dashboard":
+            return redirect(siguiente)
         if coincidencia.namespace and coincidencia.namespace not in ("core", "cuentas"):
             return redirect(f"{coincidencia.namespace}:lista")
         if coincidencia.view_name == "core:pendiente":

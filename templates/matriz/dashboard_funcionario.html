@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% load sgr %}
+{% block titulo %}Dashboard por funcionario{% endblock %}
+{% block migas %}<nav class="migas" aria-label="Ruta"><a href="{% url 'core:inicio' %}">Gestión municipal</a> / Dashboards / Funcionario</nav>{% endblock %}
+{% block contenido %}
+{% include "matriz/_cabecera_dashboard.html" with titulo_dash="Dashboard por funcionario" subtitulo_dash="Detalle de metas, ajustes por ausencia y cumplimiento por ítem." %}
+{% if equipo %}
+<form method="get" class="barra">
+  <input type="hidden" name="trimestre" value="{{ trimestre.pk }}">
+  <div><label for="sel-func">Funcionario</label>
+    <select class="campo-select" id="sel-func" name="funcionario" onchange="this.form.submit()">
+      <option value="{{ user.pk }}">{{ user.nombre }} (yo)</option>
+      {% for f in equipo %}{% if f.pk != user.pk %}<option value="{{ f.pk }}" {% if f.pk == funcionario.pk %}selected{% endif %}>{{ f.nombre }} · {{ f.get_cargo_display }}</option>{% endif %}{% endfor %}
+    </select></div>
+</form>
+{% endif %}
+{% if not trimestre %}
+  <div class="vacio">{% icono "calendario" %}<strong>No hay trimestres</strong>Configure un trimestre de evaluación para ver el semáforo.</div>
+{% elif not funcionario.cargo %}
+  <div class="vacio">{% icono "persona" %}<strong>Sin cargo asignado</strong>{{ funcionario.nombre }} no tiene cargo en la delegación, por lo que no tiene metas en la matriz.</div>
+{% else %}
+<div class="grilla-tarjetas">
+  <div class="tarjeta"><div class="tarjeta__valor">{{ resumen.total|porcentaje }}</div><div class="tarjeta__titulo">{{ funcionario.nombre }}</div><div class="tarjeta__detalle">{{ funcionario.get_cargo_display }} · {% include "matriz/_semaforo.html" with c=resumen.color %}</div></div>
+  <div class="tarjeta"><div class="tarjeta__valor">{{ resumen.puntos }}</div><div class="tarjeta__titulo">Puntos válidos</div><div class="tarjeta__detalle">En {{ trimestre.nombre }}</div></div>
+  <div class="tarjeta"><div class="tarjeta__valor">{{ resumen.dias_ausencia }}</div><div class="tarjeta__titulo">Días hábiles de ausencia</div><div class="tarjeta__detalle">de {{ resumen.dias_habiles }} hábiles del trimestre</div></div>
+</div>
+<section class="panel">
+  <h2 class="panel__titulo">{% icono "meta" %}Cumplimiento por ítem</h2>
+  <div class="tabla-contenedor"><table class="tabla">
+    <thead><tr><th scope="col">Ítem</th><th scope="col">Meta</th><th scope="col">Meta ajustada</th><th scope="col">Puntos</th><th scope="col">Cumplimiento</th><th scope="col">Semáforo</th></tr></thead>
+    <tbody>{% for i in resumen.items %}<tr>
+      <td>{{ i.item.nombre }}</td><td>{{ i.meta }}</td><td>{{ i.meta_ajustada }}</td>
+      <td>{{ i.puntos }}{% if i.sobre_tope %} <span class="chip" title="Puntos que no suben el cumplimiento por el tope de 120 %">+{{ i.puntos_sobre_tope }} sobre el tope</span>{% endif %}</td>
+      <td style="min-width:150px">{% include "matriz/_barra.html" with valor=i.cumplimiento c=i.color %}</td>
+      <td>{% include "matriz/_semaforo.html" with c=i.color %}</td></tr>
+    {% empty %}<tr><td colspan="6">No hay metas definidas para el cargo {{ funcionario.get_cargo_display }} en este trimestre.</td></tr>{% endfor %}</tbody>
+  </table></div>
+  <p class="ayuda">Meta ajustada = meta × (días hábiles − días de ausencia) ÷ días hábiles. Una vez alcanzado el 120 % de un ítem, nuevas actividades no suben el puntaje: conviene reforzar los ítems con menor cumplimiento.</p>
+</section>
+<section class="panel">
+  <h2 class="panel__titulo">{% icono "reloj" %}Ausencias en el trimestre</h2>
+  {% if ausencias %}<ul>{% for a in ausencias %}<li>{{ a.get_tipo_display }}: {{ a.desde|date:"d-m-Y" }} al {{ a.hasta|date:"d-m-Y" }} ({{ a.dias }} día(s) hábil(es)){% if a.motivo %} · {{ a.motivo }}{% endif %}</li>{% endfor %}</ul>
+  {% else %}<p class="ayuda">Sin ausencias registradas.</p>{% endif %}
+</section>
+{% endif %}
+{% endblock %}

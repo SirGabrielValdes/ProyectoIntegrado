@@ -1,0 +1,13 @@
+{% extends "crud/detalle.html" %}
+{% load sgr %}
+{% block acciones_detalle %}
+  {% if obj.respaldo %}<a class="btn btn-neutro" href="{% url 'actividades:respaldo' obj.pk %}" target="_blank" rel="noopener">{% icono "documento" "icono-sm" %}Ver respaldo</a>{% endif %}
+  {% if puede.tubo_crear %}<a class="btn btn-primario" href="{% url 'tubo:crear' %}?actividad={{ obj.pk }}">{% icono "flecha" "icono-sm" %}Derivar al tubo</a>{% endif %}
+{% endblock %}
+{% block extra_detalle %}
+  <p class="registro-automatico" style="margin-top:14px">{% icono "info" "icono-sm" %}
+    <span>{% if obj.puntaje %}Esta actividad suma <strong>1 punto</strong> en «{{ obj.item.nombre }}».{% else %}Sin puntaje: {{ obj.motivo_sin_puntaje }}{% endif %}</span></p>
+  {% with derivados=obj.compromisos.all %}{% if derivados %}
+  <p class="ayuda" style="margin-top:8px">Derivada al tubo: {% for c in derivados %}<a href="{% url 'tubo:detalle' c.pk %}">{{ c.codigo }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}</p>
+  {% endif %}{% endwith %}
+{% endblock %}

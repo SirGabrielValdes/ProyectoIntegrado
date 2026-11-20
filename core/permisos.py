@@ -16,6 +16,7 @@ ACCIONES = {
     "editar": "Editar",
     "eliminar": "Eliminar / desactivar",
     "exportar": "Exportar a Excel",
+    "aprobar": "Aprobar / validar",
 }
 
 # (código, nombre, acciones disponibles, estado del módulo en esta entrega)
@@ -24,13 +25,21 @@ MODULOS = [
     ("delegaciones", "Delegaciones", ["ver", "crear", "editar", "eliminar", "exportar"], "operativo"),
     ("roles", "Roles y permisos", ["ver", "crear", "editar", "eliminar", "exportar"], "operativo"),
     ("usuarios", "Usuarios", ["ver", "crear", "editar", "eliminar", "exportar"], "operativo"),
-    ("items", "Ítems y metas", ["ver", "crear", "editar", "eliminar", "exportar"], "operativo"),
+    ("items", "Ítems de la matriz", ["ver", "crear", "editar", "eliminar", "exportar"], "operativo"),
     ("tipos", "Tipo de Atención", ["ver", "crear", "editar", "eliminar", "exportar"], "operativo"),
     ("subatenciones", "Sub Atención", ["ver", "crear", "editar", "eliminar", "exportar"], "operativo"),
     ("atenciones", "Atenciones", ["ver", "crear", "exportar"], "operativo"),
+    ("trimestres", "Trimestres y metas", ["ver", "crear", "editar", "eliminar", "exportar"], "operativo"),
+    ("organizaciones", "JJVV y organizaciones", ["ver", "crear", "editar", "eliminar", "exportar"], "operativo"),
+    ("actividades", "Matriz de actividades", ["ver", "crear", "eliminar", "exportar", "aprobar"], "operativo"),
+    ("ausencias", "Ausencias (semáforo)", ["ver", "crear", "editar", "eliminar", "exportar"], "operativo"),
+    ("tubo", "Tubo de trabajo", ["ver", "crear", "editar", "exportar", "aprobar"], "operativo"),
+    ("areas", "Áreas de apoyo", ["ver", "crear", "editar", "eliminar", "exportar"], "operativo"),
+    ("dash_general", "Dashboard general", ["ver"], "operativo"),
+    ("dash_delegacion", "Dashboard por delegación", ["ver"], "operativo"),
+    ("dash_funcionario", "Dashboard por funcionario", ["ver"], "operativo"),
     ("vecinos", "Vecinos", ["ver"], "pendiente"),
     ("gestiones", "Tipo de Gestión", ["ver"], "pendiente"),
-    ("seguimiento", "Seguimiento", ["ver"], "pendiente"),
     ("reportes", "Reportes", ["ver"], "pendiente"),
     ("auditoria", "Auditoría", ["ver"], "pendiente"),
 ]
@@ -50,7 +59,6 @@ CRUD = ("ver", "crear", "editar", "eliminar", "exportar")
 # y pueden modificarse desde el mantenedor de Roles).
 ROLES_BASE = {
     "SUPERADMIN": {
-        "codigo": "ROL01",
         "nombre": "Superadministrador",
         "descripcion": "Administra todo el sistema, todas las delegaciones y la configuración de seguridad.",
         "alcance": "GLOBAL",
@@ -58,7 +66,6 @@ ROLES_BASE = {
         "permisos": list(TODOS_LOS_PERMISOS),
     },
     "COORDINADOR": {
-        "codigo": "ROL02",
         "nombre": "Coordinador",
         "descripcion": "Coordina varias delegaciones: administra usuarios de sus delegaciones y los catálogos de atención.",
         "alcance": "MULTIPLE",
@@ -70,29 +77,42 @@ ROLES_BASE = {
             + _mod("tipos", *CRUD)
             + _mod("subatenciones", *CRUD)
             + _mod("atenciones", "ver", "crear", "exportar")
-            + ["vecinos.ver", "gestiones.ver", "seguimiento.ver", "reportes.ver"]
+            + _mod("trimestres", *CRUD)
+            + _mod("organizaciones", *CRUD)
+            + _mod("actividades", "ver", "exportar", "aprobar")
+            + _mod("ausencias", *CRUD)
+            + _mod("tubo", "ver", "crear", "editar", "exportar", "aprobar")
+            + _mod("areas", *CRUD)
+            + ["dash_general.ver", "dash_delegacion.ver", "dash_funcionario.ver"]
+            + ["vecinos.ver", "gestiones.ver", "reportes.ver"]
         ),
     },
     "DELEGADO": {
-        "codigo": "ROL03",
         "nombre": "Delegado municipal",
-        "descripcion": "Responsable de una delegación: consulta su equipo y catálogos, registra y supervisa atenciones.",
+        "descripcion": "Responsable de una delegación: supervisa su equipo, valida felicitaciones y evidencias, e ingresa ausencias.",
         "alcance": "DELEGACION",
         "es_sistema": False,
         "permisos": (
             ["inicio.ver", "delegaciones.ver", "usuarios.ver", "usuarios.exportar",
              "items.ver", "items.exportar", "tipos.ver", "subatenciones.ver"]
             + _mod("atenciones", "ver", "crear", "exportar")
-            + ["vecinos.ver", "seguimiento.ver", "reportes.ver"]
+            + ["trimestres.ver", "areas.ver"]
+            + _mod("organizaciones", *CRUD)
+            + _mod("actividades", "ver", "crear", "eliminar", "exportar", "aprobar")
+            + _mod("ausencias", *CRUD)
+            + _mod("tubo", "ver", "crear", "editar", "exportar", "aprobar")
+            + ["dash_delegacion.ver", "dash_funcionario.ver"]
+            + ["vecinos.ver", "reportes.ver"]
         ),
     },
     "FUNCIONARIO": {
-        "codigo": "ROL04",
         "nombre": "Funcionario",
-        "descripcion": "Operador de atención ciudadana en su delegación: registra y consulta atenciones.",
+        "descripcion": "Operador de su delegación: registra atenciones y sus actividades de la matriz SGR.",
         "alcance": "DELEGACION",
         "es_sistema": False,
-        "permisos": ["inicio.ver", "atenciones.ver", "atenciones.crear", "vecinos.ver"],
+        "permisos": ["inicio.ver", "atenciones.ver", "atenciones.crear", "organizaciones.ver",
+                     "actividades.ver", "actividades.crear", "actividades.eliminar",
+                     "tubo.ver", "tubo.crear", "tubo.editar", "dash_funcionario.ver", "vecinos.ver"],
     },
 }
 

@@ -55,6 +55,8 @@ INSTALLED_APPS = [
     "cuentas",
     "catalogos",
     "atenciones",
+    "matriz",
+    "tubo",
 ]
 
 MIDDLEWARE = [
@@ -66,6 +68,7 @@ MIDDLEWARE = [
     # Toda ruta exige sesión salvo las marcadas con @login_not_required.
     "django.contrib.auth.middleware.LoginRequiredMiddleware",
     "core.middleware.ContextoDelegacionMiddleware",
+    "core.middleware.CambioClaveObligatorioMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -178,6 +181,13 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# Archivos subidos (fotos de evidencia y respaldos de felicitaciones). No se publican
+# directamente: se sirven por vistas que validan permisos y delegación.
+MEDIA_ROOT = Path(os.environ.get("SGR_MEDIA_ROOT", BASE_DIR / "media"))
+MEDIA_URL = "/archivos/"
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
+FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
 
 MESSAGE_TAGS = {40: "error"}
 

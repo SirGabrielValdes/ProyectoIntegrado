@@ -1,0 +1,22 @@
+{% extends "auth/base_auth.html" %}
+{% load static sgr %}
+{% block titulo %}Cambiar contraseña{% endblock %}
+{% block contenido %}
+<h2>{% if obligatorio %}Cambie su clave provisoria{% else %}Cambiar contraseña{% endif %}</h2>
+<p class="subtitulo">{% if obligatorio %}Hola {{ user.nombre }}. Por seguridad, antes de continuar debe reemplazar la clave provisoria que recibió por correo.{% else %}Defina su nueva contraseña.{% endif %}</p>
+<form method="post" id="form-clave" data-validar data-un-envio novalidate>
+  {% csrf_token %}
+  {% include "crud/_campo.html" with campo=form.clave1 %}
+  <ul class="requisitos" id="requisitos" aria-live="polite" aria-label="Requisitos de la contraseña">
+    {% for clave, texto in requisitos %}<li class="no" data-requisito="{{ clave }}"><span class="marca" aria-hidden="true"></span><span>{{ texto }}</span><span class="sr-only estado-req">(pendiente)</span></li>{% endfor %}
+    <li class="no" data-requisito="coincide"><span class="marca" aria-hidden="true"></span><span>La confirmación coincide</span><span class="sr-only estado-req">(pendiente)</span></li>
+  </ul>
+  {% include "crud/_campo.html" with campo=form.clave2 %}
+  <button class="btn btn-primario btn-bloque" type="submit">{% icono "candado" "icono-sm" %}Guardar nueva contraseña</button>
+</form>
+<form method="post" action="{% url 'cuentas:logout' %}" class="enlaces-acceso">
+  {% csrf_token %}
+  {% if obligatorio %}<button class="enlace-accion" type="submit">Cerrar sesión</button>{% else %}<a href="{% url 'core:inicio' %}">Volver al inicio</a>{% endif %}
+</form>
+{% endblock %}
+{% block scripts %}<script src="{% static 'js/recuperacion.js' %}"></script>{% endblock %}

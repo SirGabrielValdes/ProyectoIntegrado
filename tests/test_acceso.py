@@ -12,11 +12,11 @@ NUEVA = "Nueva#Clave2026"
 
 class LoginTests(PruebaSGR):
     def test_login_correcto_usuario(self):
-        """A1-Login | Login | Usuario «funcionario» activo | Ingresar usuario y contraseña válidos | Redirige al inicio con sesión iniciada y delegación activa DEL01"""
+        """A1-Login | Login | Usuario «funcionario» activo | Ingresar usuario y contraseña válidos | Redirige al inicio con sesión iniciada y delegación activa DEL-00001"""
         r = self.client.post("/cuenta/ingresar/", {"identificador": "funcionario", "clave": CLAVE})
         self.assertRedirects(r, "/")
         r = self.client.get("/")
-        self.assertContains(r, "DEL01")
+        self.assertContains(r, "DEL-00001")
         self.assertContains(r, "Fernanda Funcionaria")
 
     def test_login_correcto_correo_sin_mayusculas(self):

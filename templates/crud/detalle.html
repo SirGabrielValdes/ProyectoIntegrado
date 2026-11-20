@@ -23,14 +23,16 @@
     {% if obj.actualizado %}<dt>Última modificación</dt><dd>{{ obj.actualizado|valor }}</dd>{% endif %}
   </dl>
   {% block extra_detalle %}{% endblock %}
-  {% if puede_eliminar and activo is not None %}
+  {% if puede_eliminar %}
   <div class="botonera">
     {% if motivo_no_eliminar %}<div class="alerta alerta-neutra" style="margin:0 auto 0 0">{% icono "info" %}<span>{{ motivo_no_eliminar }}</span></div>{% endif %}
+    {% if activo is not None %}
     <form method="post" action="{% url modulo|add:':estado' obj.pk %}"
           data-confirmar="{% if activo %}¿Desactivar «{{ obj }}»?{% else %}¿Activar «{{ obj }}»?{% endif %}"
           data-confirmar-boton="{% if activo %}Desactivar{% else %}Activar{% endif %}" data-cancelado="No se realizaron cambios.">
       {% csrf_token %}<button class="btn btn-neutro" type="submit">{% icono "pausa" "icono-sm" %}{% if activo %}Desactivar{% else %}Activar{% endif %}</button>
     </form>
+    {% endif %}
     {% if not motivo_no_eliminar %}
     <form method="post" action="{% url modulo|add:':eliminar' obj.pk %}"
           data-confirmar="¿Eliminar «{{ obj }}»? Esta acción no se puede deshacer."

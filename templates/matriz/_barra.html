@@ -1,0 +1,5 @@
+{% load sgr %}{% if valor is None %}<span class="ayuda">—</span>{% else %}
+<div class="barra-cumplimiento barra-{{ c|lower }}" role="img" aria-label="Cumplimiento {{ valor|porcentaje }}">
+  <div class="barra-cumplimiento__relleno" style="width: {{ valor|ancho_barra }}%"></div>
+  <span class="barra-cumplimiento__texto">{{ valor|porcentaje }}</span>
+</div>{% endif %}

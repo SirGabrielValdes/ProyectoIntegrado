@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% load sgr %}
+{% block titulo %}Dashboard general{% endblock %}
+{% block migas %}<nav class="migas" aria-label="Ruta"><a href="{% url 'core:inicio' %}">Gestión municipal</a> / Dashboards / General</nav>{% endblock %}
+{% block contenido %}
+{% include "matriz/_cabecera_dashboard.html" with titulo_dash="Dashboard general" subtitulo_dash="Cumplimiento de metas de todas las delegaciones autorizadas." %}
+{% if not trimestre %}
+  <div class="vacio">{% icono "calendario" %}<strong>No hay trimestres</strong>Configure un trimestre de evaluación para ver el semáforo.</div>
+{% else %}
+<div class="grilla-tarjetas">
+  <div class="tarjeta"><div class="tarjeta__valor">{{ resumen.total|porcentaje }}</div><div class="tarjeta__titulo">Cumplimiento general</div><div class="tarjeta__detalle">{% include "matriz/_semaforo.html" with c=resumen.color %}</div></div>
+  <div class="tarjeta"><div class="tarjeta__valor">{{ resumen.conteo.VERDE|default:0 }}</div><div class="tarjeta__titulo">Delegaciones en verde</div><div class="tarjeta__detalle">Cumplen la meta</div></div>
+  <div class="tarjeta"><div class="tarjeta__valor">{{ resumen.conteo.AMARILLO|default:0 }}</div><div class="tarjeta__titulo">En amarillo</div><div class="tarjeta__detalle">En riesgo</div></div>
+  <div class="tarjeta"><div class="tarjeta__valor">{{ resumen.conteo.ROJO|default:0 }}</div><div class="tarjeta__titulo">En rojo</div><div class="tarjeta__detalle">Bajo la meta</div></div>
+</div>
+<section class="panel">
+  <h2 class="panel__titulo">{% icono "edificio" %}Cumplimiento por delegación · {{ trimestre.nombre }}</h2>
+  <div class="tabla-contenedor">
+    <table class="tabla">
+      <thead><tr><th scope="col">Delegación</th><th scope="col">Funcionarios con meta</th><th scope="col">Actividades</th><th scope="col">Puntos válidos</th><th scope="col">Cumplimiento</th><th scope="col">Semáforo</th></tr></thead>
+      <tbody>
+      {% for d in resumen.delegaciones %}
+        <tr>
+          <td><strong>{{ d.delegacion.codigo }}</strong> · {{ d.delegacion.nombre }}</td>
+          <td>{{ d.funcionarios|length }}</td>
+          <td>{{ d.actividades }}</td>
+          <td>{{ d.validas }}</td>
+          <td style="min-width:180px">{% include "matriz/_barra.html" with valor=d.total c=d.color %}</td>
+          <td>{% include "matriz/_semaforo.html" with c=d.color %}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p class="ayuda">El cumplimiento de cada delegación es el promedio de sus ítems (puntos del equipo ÷ metas ajustadas del equipo, con tope de 120 % por ítem).</p>
+</section>
+{% endif %}
+{% endblock %}

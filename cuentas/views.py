@@ -4,24 +4,26 @@ from datetime import datetime, timedelta
 
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth import login, logout
+from django.contrib.auth import login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_not_required
 from django.core.cache import cache
 from django.core.mail import send_mail
 from django.db import transaction
 from django.shortcuts import redirect, render
+from django.urls import path
 from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
 from core.crud import Columna, Filtro, Mantenedor, filtro_estado
 from core.middleware import CLAVE_SESION
-from core.permisos import ACCIONES, NOMBRE_MODULO
+from core.permisos import ACCIONES, NOMBRE_MODULO, requiere_permiso
 
 from .backends import buscar_por_identificador
 from .forms import (LoginForm, NuevaClaveForm, RolForm, SolicitarCodigoForm, UsuarioForm,
                     ValidarCodigoForm)
 from .models import Rol, SolicitudRecuperacion, Usuario
+from .servicios import enviar_clave_provisoria, generar_clave_provisoria
 from .validadores import REQUISITOS_CLAVE
 
 log = logging.getLogger("sgr")
@@ -271,6 +273,25 @@ def nueva_clave(request):
 
 
 # =============================================================================
+# Cambio de clave (obligatorio tras clave provisoria, o voluntario)
+# =============================================================================
+def cambiar_clave(request):
+    usuario = request.user
+    form = NuevaClaveForm(request.POST if request.method == "POST" else None, usuario=usuario)
+    if request.method == "POST" and form.is_valid():
+        usuario.set_password(form.cleaned_data["clave1"])
+        usuario.debe_cambiar_clave = False
+        usuario.save(update_fields=["password", "debe_cambiar_clave"])
+        update_session_auth_hash(request, usuario)
+        messages.success(request, "Contraseña actualizada correctamente.")
+        return redirect("core:inicio")
+    return render(request, "auth/cambiar_clave.html", {
+        "form": form, "requisitos": REQUISITOS_CLAVE, "obligatorio": usuario.debe_cambiar_clave,
+        "errores_formulario": request.method == "POST" and bool(form.errors),
+    })
+
+
+# =============================================================================
 # Mantenedor de Roles
 # =============================================================================
 def _alcance_rol(rol):
@@ -369,22 +390,28 @@ class UsuariosMantenedor(Mantenedor):
     singular = "usuario"
     campo_estado = "is_active"
     plantilla_form = "cuentas/usuario_form.html"
-    campos_busqueda = ["nombre", "username", "correo", "rol__nombre", "delegaciones__codigo",
+    plantilla_detalle = "cuentas/usuario_detalle.html"
+    campos_busqueda = ["nombre", "username", "correo", "rol__nombre", "cargo", "delegaciones__codigo",
                        "delegaciones__nombre"]
     columnas = [
         Columna("Nombre", "nombre", "enlace"),
         Columna("Usuario", "username"),
         Columna("Correo", "correo"),
         Columna("Rol", "rol.nombre"),
+        Columna("Cargo", lambda u: u.get_cargo_display() or "—"),
         Columna("Delegación", _delegaciones_usuario),
         Columna("Estado", "estado_texto", "estado"),
     ]
     # Nunca se exportan contraseñas, tokens ni campos internos.
     columnas_excel = [("Nombre", "nombre"), ("Usuario", "username"), ("Correo", "correo"),
-                      ("Rol", "rol.nombre"), ("Delegaciones autorizadas", _delegaciones_usuario),
+                      ("Rol", "rol.nombre"), ("Cargo", lambda u: u.get_cargo_display()),
+                      ("Delegaciones autorizadas", _delegaciones_usuario),
                       ("Estado", "estado_texto"), ("Último ingreso", lambda u: u.last_login or "")]
     detalle = [("Nombre", "nombre"), ("Usuario", "username"), ("Correo", "correo"), ("Rol", "rol"),
+               ("Cargo", lambda u: u.get_cargo_display() or "Sin cargo (administración)"),
                ("Alcance del rol", lambda u: u.rol.get_alcance_display()),
+               ("Clave", lambda u: "Provisoria: debe cambiarla en su próximo ingreso" if u.debe_cambiar_clave
+                else "Definida por el usuario"),
                ("Delegaciones autorizadas", _delegaciones_usuario),
                ("Último ingreso", lambda u: u.last_login or "Nunca"),
                ("Atenciones registradas", lambda u: u.atenciones.count())]
@@ -422,6 +449,42 @@ class UsuariosMantenedor(Mantenedor):
         if obj.pk == request.user.pk:
             return "No puede desactivar su propia cuenta."
         return None
+
+    def guardar(self, request, form, creando):
+        usuario = form.save()
+        if creando and form.clave_provisoria:
+            self._avisar_envio(request, usuario, form.clave_provisoria)
+        return usuario
+
+    def _avisar_envio(self, request, usuario, clave):
+        if enviar_clave_provisoria(usuario, clave, request):
+            messages.info(request, f"Se envió la clave provisoria a {usuario.correo}. "
+                                   "El usuario deberá cambiarla en su primer ingreso.")
+        else:
+            messages.warning(request, "El usuario se creó, pero no fue posible enviar el correo con la clave "
+                                      "provisoria. Use «Reenviar clave provisoria» en su ficha.")
+
+    def vista_reenviar_clave(self, request, pk):
+        usuario = self.obtener(request, pk)
+        if not usuario.is_active:
+            messages.error(request, "No se puede enviar una clave a una cuenta inactiva.")
+            return redirect(self.url("detalle", usuario.pk))
+        clave = generar_clave_provisoria()
+        usuario.set_password(clave)
+        usuario.debe_cambiar_clave = True
+        usuario.save(update_fields=["password", "debe_cambiar_clave"])
+        if enviar_clave_provisoria(usuario, clave, request):
+            messages.success(request, f"Se envió una nueva clave provisoria a {usuario.correo}.")
+        else:
+            messages.error(request, "No fue posible enviar el correo. La clave anterior ya no es válida; "
+                                    "revise la configuración de correo e intente nuevamente.")
+        return redirect(self.url("detalle", usuario.pk))
+
+    def urls(self):
+        patrones, nombre = super().urls()
+        vista = require_POST(requiere_permiso("usuarios.ver", "usuarios.editar")(self.vista_reenviar_clave))
+        patrones.append(path("<int:pk>/reenviar-clave/", vista, name="reenviar_clave"))
+        return patrones, nombre
 
 
 roles = RolesMantenedor()

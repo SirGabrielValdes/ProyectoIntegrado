@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% load sgr %}
+{% block titulo %}Tubo de trabajo{% endblock %}
+{% block migas %}<nav class="migas" aria-label="Ruta"><a href="{% url 'core:inicio' %}">Gestión municipal</a> / Tubo de trabajo</nav>{% endblock %}
+{% block contenido %}
+<div class="encabezado">
+  <div>
+    <h1>Tubo de trabajo</h1>
+    <p>Compromisos derivados para seguimiento en <strong>{{ delegacion_activa.codigo }} · {{ delegacion_activa.nombre }}</strong>.</p>
+  </div>
+  <div class="acciones-encabezado">
+    <a class="btn btn-neutro" href="{% url 'tubo:tabla' %}">{% icono "lista" "icono-sm" %}Vista de tabla</a>
+    {% if puede_exportar %}<a class="btn btn-secundario" href="{% url 'tubo:exportar' %}" data-exportar="Se exportarán todos los compromisos de la delegación.">{% icono "excel" "icono-sm" %}Exportar a Excel</a>{% endif %}
+    {% if puede_crear %}<a class="btn btn-primario" href="{% url 'tubo:crear' %}">{% icono "mas" %}Ingresar compromiso</a>{% endif %}
+  </div>
+</div>
+
+<div class="indicadores-tubo">
+  <div class="indicador ind-rojo"><span class="indicador__titulo">Gestiones en tubo</span><span class="indicador__valor">{{ indicadores.total }}</span><span class="indicador__detalle">Derivadas para seguimiento</span></div>
+  <div class="indicador ind-verde"><span class="indicador__titulo">Realizadas / concluidas</span><span class="indicador__valor">{{ indicadores.realizados }}</span><span class="indicador__detalle">Tasa de resolución: {{ indicadores.tasa|floatformat:1 }} %</span></div>
+  <div class="indicador ind-ambar"><span class="indicador__titulo">En proceso activo</span><span class="indicador__valor">{{ indicadores.en_proceso }}</span><span class="indicador__detalle">Con cuadrilla o área de apoyo</span></div>
+  <div class="indicador ind-rojo"><span class="indicador__titulo">Pendientes / alerta</span><span class="indicador__valor">{{ indicadores.pendientes }}</span><span class="indicador__detalle">Esperando gestión técnica</span></div>
+</div>
+
+<form class="barra" method="get">
+  <div class="busqueda"><label for="q">Buscar en el tubo</label>
+    <div class="con-icono">{% icono "lupa" %}<input class="campo-input" type="search" id="q" name="q" value="{{ q }}" placeholder="Código, compromiso, solicitante o responsable…"></div></div>
+  <div><label for="f-resp">Responsable</label>
+    <select class="campo-select" id="f-resp" name="responsable" onchange="this.form.submit()"><option value="">Todos</option>
+      {% for v, t in responsables %}<option value="{{ v }}" {% if responsable_sel == v|stringformat:"s" %}selected{% endif %}>{{ t }}</option>{% endfor %}</select></div>
+  <button class="btn btn-neutro" type="submit">{% icono "lupa" "icono-sm" %}Filtrar</button>
+  {% if q or responsable_sel %}<a class="btn btn-neutro" href="?">Limpiar</a>{% endif %}
+</form>
+
+<div class="kanban">
+  {% for col in columnas %}
+  <section class="kanban__columna col-{{ col.estado|lower }}" aria-labelledby="col-{{ col.estado }}">
+    <header class="kanban__cabecera"><h2 id="col-{{ col.estado }}">{{ forloop.counter }}. {{ col.nombre }}</h2><span class="kanban__conteo">{{ col.items|length }}</span></header>
+    {% for c in col.items %}
+    <article class="tarjeta-tubo">
+      <div class="tarjeta-tubo__codigos"><span class="tarjeta-tubo__codigo">{{ c.codigo }}</span>{% if c.referencia %}<span class="chip">{{ c.referencia }}</span>{% endif %}</div>
+      <h3 class="tarjeta-tubo__titulo{% if c.estado == 'REALIZADO' %} tachado{% endif %}">{{ c.titulo }}</h3>
+      <p><strong>Solicitante:</strong> {{ c.solicitante }}</p>
+      {% if c.area_apoyo %}<p class="tarjeta-tubo__apoyo"><strong>Apoyo:</strong> {{ c.area_apoyo.nombre }}</p>{% endif %}
+      <footer class="tarjeta-tubo__pie">
+        {% if c.estado == "REALIZADO" %}<span class="estado-concluido">{% icono "check" "icono-sm" %}Concluido</span>
+        {% else %}<span class="ayuda">Responsable: {{ c.responsable.nombre }}</span>{% endif %}
+        <span class="acciones-fila">
+          <a class="enlace-accion" href="{% url 'tubo:detalle' c.pk %}">Ver{% if c.estado == "REALIZADO" %} detalle{% endif %}</a>
+          {% if puede.tubo_editar and c.siguiente and c.siguiente.0 != "REALIZADO" %}
+          <form method="post" action="{% url 'tubo:avanzar' c.pk %}" data-confirmar="¿Mover {{ c.codigo }} a «{{ c.siguiente.1|slice:'2:' }}»?" data-confirmar-boton="{{ c.siguiente.1 }}">
+            {% csrf_token %}<input type="hidden" name="volver" value="tablero"><button class="btn-estado" type="submit">{{ c.siguiente.1 }}</button>
+          </form>
+          {% elif puede.tubo_editar and c.siguiente %}<a class="btn-estado" href="{% url 'tubo:detalle' c.pk %}#evidencias">Realizar</a>{% endif %}
+        </span>
+      </footer>
+    </article>
+    {% empty %}<p class="kanban__vacio">Sin compromisos.</p>{% endfor %}
+  </section>
+  {% endfor %}
+</div>
+{% endblock %}

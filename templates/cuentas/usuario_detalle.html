@@ -1,0 +1,12 @@
+{% extends "crud/detalle.html" %}
+{% load sgr %}
+{% block acciones_detalle %}
+  {{ block.super }}
+  {% if puede_editar and obj.is_active %}
+  <form method="post" action="{% url 'usuarios:reenviar_clave' obj.pk %}" style="display:inline"
+        data-confirmar="Se generará una nueva clave provisoria para «{{ obj }}» y se enviará a {{ obj.correo }}. La clave actual dejará de funcionar."
+        data-confirmar-titulo="Reenviar clave provisoria" data-confirmar-boton="Enviar" data-cancelado="No se realizaron cambios.">
+    {% csrf_token %}<button class="btn btn-secundario" type="submit">{% icono "correo" "icono-sm" %}Reenviar clave provisoria</button>
+  </form>
+  {% endif %}
+{% endblock %}

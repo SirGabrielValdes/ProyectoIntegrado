@@ -7,23 +7,27 @@ from .base import PruebaSGR
 
 class PerfilesTests(PruebaSGR):
     def test_menu_funcionario(self):
-        """A10-Roles | Menú | Funcionario | Ingresar y revisar el menú | Solo ve Inicio, Atenciones y Vecinos (plantilla); no ve mantenedores"""
+        """A10-Roles | Menú | Funcionario | Ingresar y revisar el menú | Solo ve Inicio, Atenciones, Matriz de actividades, Tubo, Dashboards, Organizaciones y Vecinos (plantilla); no ve mantenedores"""
         self.entrar("funcionario")
         r = self.client.get("/")
         menu = [i["modulo"] for i in r.context["menu"]]
-        self.assertEqual(menu, ["inicio", "atenciones", "vecinos"])
+        self.assertEqual(menu, ["inicio", "atenciones", "actividades", "tubo", "dashboard", "organizaciones", "vecinos"])
 
     def test_menu_por_rol(self):
         """A10-Roles | Menú | Los 4 roles definidos | Ingresar con cada rol | Cada uno ve únicamente sus módulos autorizados"""
         esperado = {
             "superadmin": {"delegaciones", "roles", "usuarios", "items", "tipos", "subatenciones", "atenciones",
+                           "trimestres", "organizaciones", "actividades", "ausencias", "tubo", "areas", "dashboard",
                            "auditoria"},
-            "coordinador": {"delegaciones", "roles", "usuarios", "items", "tipos", "subatenciones", "atenciones"},
-            "delegado": {"delegaciones", "usuarios", "items", "tipos", "subatenciones", "atenciones", "reportes"},
-            "funcionario": {"atenciones", "vecinos"},
+            "coordinador": {"delegaciones", "roles", "usuarios", "items", "tipos", "subatenciones", "atenciones",
+                            "trimestres", "ausencias", "tubo", "areas", "dashboard"},
+            "delegado": {"delegaciones", "usuarios", "items", "tipos", "subatenciones", "atenciones", "actividades",
+                         "ausencias", "tubo", "dashboard", "reportes"},
+            "funcionario": {"atenciones", "actividades", "tubo", "dashboard", "vecinos"},
         }
         prohibido = {"coordinador": {"auditoria"}, "delegado": {"roles", "auditoria"},
-                     "funcionario": {"delegaciones", "roles", "usuarios", "items", "tipos", "subatenciones"}}
+                     "funcionario": {"delegaciones", "roles", "usuarios", "items", "tipos", "subatenciones",
+                                     "trimestres", "ausencias", "areas"}}
         for usuario, modulos in esperado.items():
             self.client.logout()
             self.entrar(usuario)
@@ -35,7 +39,9 @@ class PerfilesTests(PruebaSGR):
         """A2-Perfil | Seguridad | Funcionario sin permisos de mantenedores | Abrir por URL listados, creación, exportación y módulo de auditoría | El servidor responde 403 en todos los casos"""
         self.entrar("funcionario")
         for url in ["/delegaciones/", "/roles/", "/usuarios/", "/usuarios/nuevo/", "/items/exportar/",
-                    "/tipos-atencion/", "/sub-atenciones/1/editar/", "/modulo/auditoria/"]:
+                    "/tipos-atencion/", "/sub-atenciones/1/editar/", "/modulo/auditoria/", "/trimestres/",
+                    "/ausencias/", "/ausencias/nuevo/", "/dashboard/general/", "/dashboard/delegacion/",
+                    "/areas-apoyo/", "/actividades/exportar/"]:
             self.assertEqual(self.client.get(url).status_code, 403, url)
         self.assertEqual(self.client.post("/items/1/eliminar/").status_code, 403)
 
@@ -51,7 +57,7 @@ class PerfilesTests(PruebaSGR):
         """A2-Delegación | Cabecera | Funcionario con una sola delegación | Abrir cualquier pantalla | La cabecera muestra código, nombre, usuario, rol e indica contexto fijo sin selector"""
         self.entrar("funcionario")
         r = self.client.get("/atenciones/")
-        self.assertContains(r, 'data-delegacion-activa="DEL01"')
+        self.assertContains(r, 'data-delegacion-activa="DEL-00001"')
         self.assertContains(r, "Delegación Centro")
         self.assertContains(r, "Fernanda Funcionaria")
         self.assertContains(r, "Funcionario")
@@ -59,15 +65,15 @@ class PerfilesTests(PruebaSGR):
         self.assertNotContains(r, 'id="selector-delegacion"')
 
     def test_selector_solo_delegaciones_autorizadas(self):
-        """A2-Delegación | Cabecera | Coordinador con DEL01, DEL02 y DEL03 | Revisar el selector de delegación | Solo lista las 3 autorizadas"""
+        """A2-Delegación | Cabecera | Coordinador con DEL-00001, DEL-00002 y DEL-00003 | Revisar el selector de delegación | Solo lista las 3 autorizadas"""
         self.entrar("coordinador")
         r = self.client.get("/")
         codigos = [d.codigo for d in r.context["delegaciones_autorizadas"]]
-        self.assertEqual(codigos, ["DEL01", "DEL02", "DEL03"])
-        self.assertNotContains(r, "DEL04 |")
+        self.assertEqual(codigos, ["DEL-00001", "DEL-00002", "DEL-00003"])
+        self.assertNotContains(r, "DEL-00004 |")
 
     def test_cambio_a_delegacion_no_autorizada(self):
-        """A2-Delegación | Contexto | Coordinador sin DEL04; funcionario con solo DEL01 | Enviar POST de cambio de contexto a DEL04 / DEL02 alterando la solicitud | El servidor responde 403 y el contexto no cambia"""
+        """A2-Delegación | Contexto | Coordinador sin DEL-00004; funcionario con solo DEL-00001 | Enviar POST de cambio de contexto a DEL-00004 / DEL-00002 alterando la solicitud | El servidor responde 403 y el contexto no cambia"""
         self.entrar("coordinador")
         r = self.client.post("/contexto/delegacion/", {"delegacion": self.del04.pk})
         self.assertEqual(r.status_code, 403)
@@ -77,7 +83,7 @@ class PerfilesTests(PruebaSGR):
         self.assertEqual(self.client.post("/contexto/delegacion/", {"delegacion": self.del02.pk}).status_code, 403)
 
     def test_sesion_manipulada_se_corrige(self):
-        """A2-Delegación | Contexto | Funcionario de DEL01 | Forzar en la sesión una delegación ajena (DEL02) | El servidor la reemplaza por una autorizada"""
+        """A2-Delegación | Contexto | Funcionario de DEL-00001 | Forzar en la sesión una delegación ajena (DEL-00002) | El servidor la reemplaza por una autorizada"""
         self.entrar("funcionario")
         s = self.client.session
         s["delegacion_activa_id"] = self.del02.pk
@@ -86,7 +92,7 @@ class PerfilesTests(PruebaSGR):
         self.assertEqual(r.context["delegacion_activa"], self.del01)
 
     def test_cambio_contexto_actualiza_listado(self):
-        """A2-Delegación | Contexto | Coordinador; atenciones en DEL01 y DEL02 | Cambiar de DEL01 a DEL02 desde un formulario | Redirige al listado del módulo y solo muestra atenciones de DEL02"""
+        """A2-Delegación | Contexto | Coordinador; atenciones en DEL-00001 y DEL-00002 | Cambiar de DEL-00001 a DEL-00002 desde un formulario | Redirige al listado del módulo y solo muestra atenciones de DEL-00002"""
         self.entrar("coordinador")
         crear_atencion(self.del01, "funcionario")
         crear_atencion(self.del02, "funcionario2")
@@ -94,11 +100,11 @@ class PerfilesTests(PruebaSGR):
         r = self.client.post("/contexto/delegacion/", {"delegacion": self.del02.pk, "siguiente": "/atenciones/nueva/"})
         self.assertRedirects(r, "/atenciones/")
         r = self.client.get("/atenciones/")
-        self.assertEqual([f["obj"].delegacion.codigo for f in r.context["filas"]], ["DEL02"])
+        self.assertEqual([f["obj"].delegacion.codigo for f in r.context["filas"]], ["DEL-00002"])
 
 
 def crear_atencion(delegacion, username):
-    s = SubAtencion.objects.get(codigo="SA01")
+    s = SubAtencion.objects.get(nombre="Ayuda social")
     return Atencion.objects.create(vecino=Vecino.objects.first(), tipo=s.tipo, subatencion=s,
                                    descripcion="Atención de prueba", delegacion=delegacion,
                                    responsable=Usuario.objects.get(username=username))
@@ -108,8 +114,8 @@ class IngresoAtencionTests(PruebaSGR):
     def setUp(self):
         super().setUp()
         self.usuario = self.entrar("funcionario")
-        self.tipo = TipoAtencion.objects.get(codigo="TA01")
-        self.sub = SubAtencion.objects.get(codigo="SA01")
+        self.tipo = TipoAtencion.objects.get(nombre="Social")
+        self.sub = SubAtencion.objects.get(nombre="Ayuda social")
         self.vecino = Vecino.objects.first()
 
     def token(self):
@@ -124,7 +130,7 @@ class IngresoAtencionTests(PruebaSGR):
         return base
 
     def test_registro_con_contexto_del_servidor(self):
-        """A2-Ingreso de atención | Atenciones | Funcionario en DEL01 | Guardar una atención enviando además una delegación y responsable ajenos en la solicitud | Se registra con DEL01, el usuario de sesión y la fecha automática; se muestra el folio"""
+        """A2-Ingreso de atención | Atenciones | Funcionario en DEL-00001 | Guardar una atención enviando además una delegación y responsable ajenos en la solicitud | Se registra con DEL-00001, el usuario de sesión y la fecha automática; se muestra el folio"""
         datos = self.datos(delegacion=self.del02.pk, responsable=1)
         r = self.client.post("/atenciones/nueva/", datos)
         a = Atencion.objects.get()
@@ -144,20 +150,20 @@ class IngresoAtencionTests(PruebaSGR):
         self.assertEqual(Atencion.objects.count(), 0)
 
     def test_dependencia_tipo_subatencion(self):
-        """A3-Tipo y Sub Atención | Atenciones | SA04 pertenece a TA02 | Enviar TA01 con la sub atención SA04 | Se rechaza por no corresponder al tipo"""
-        otra = SubAtencion.objects.get(codigo="SA04")
+        """A3-Tipo y Sub Atención | Atenciones | SAT-00004 pertenece a TAT-00002 | Enviar TAT-00001 con la sub atención SAT-00004 | Se rechaza por no corresponder al tipo"""
+        otra = SubAtencion.objects.get(nombre="Luminaria pública")
         r = self.client.post("/atenciones/nueva/", self.datos(subatencion=otra.pk))
         self.assertContains(r, "La Sub Atención no es válida")
         self.assertEqual(Atencion.objects.count(), 0)
 
     def test_api_subatenciones_solo_activas_del_tipo(self):
-        """A2-Ingreso de atención | Atenciones | TA01 con 3 sub atenciones; se desactiva SA02 | Consultar las sub atenciones de TA01 | Solo se devuelven las activas del tipo (2)"""
-        SubAtencion.objects.filter(codigo="SA02").update(activo=False)
+        """A2-Ingreso de atención | Atenciones | TAT-00001 con 3 sub atenciones; se desactiva SAT-00002 | Consultar las sub atenciones de TAT-00001 | Solo se devuelven las activas del tipo (2)"""
+        SubAtencion.objects.filter(nombre="Orientación en beneficios").update(activo=False)
         datos = self.client.get(f"/atenciones/api/subatenciones/?tipo={self.tipo.pk}").json()
         self.assertEqual({r["texto"] for r in datos["resultados"]}, {"Ayuda social", "Registro Social de Hogares"})
 
     def test_subatencion_inactiva_rechazada(self):
-        """A3-Ingreso de atención | Atenciones | SA01 desactivada | Guardar una atención con SA01 | Se rechaza por sub atención inactiva"""
+        """A3-Ingreso de atención | Atenciones | SAT-00001 desactivada | Guardar una atención con SAT-00001 | Se rechaza por sub atención inactiva"""
         SubAtencion.objects.filter(pk=self.sub.pk).update(activo=False)
         r = self.client.post("/atenciones/nueva/", self.datos())
         self.assertContains(r, "La Sub Atención no es válida o está inactiva")
@@ -188,7 +194,7 @@ class IngresoAtencionTests(PruebaSGR):
         self.assertEqual(Atencion.objects.count(), 0)
 
     def test_no_ver_atencion_de_otra_delegacion(self):
-        """A2-Delegación | Atenciones | Atención registrada en DEL02 | Funcionario de DEL01 abre su URL directamente | Responde 404 (fuera de alcance)"""
+        """A2-Delegación | Atenciones | Atención registrada en DEL-00002 | Funcionario de DEL-00001 abre su URL directamente | Responde 404 (fuera de alcance)"""
         a = crear_atencion(self.del02, "funcionario2")
         self.assertEqual(self.client.get(f"/atenciones/{a.pk}/").status_code, 404)
 

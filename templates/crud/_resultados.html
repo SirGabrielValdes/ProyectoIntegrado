@@ -1,0 +1,30 @@
+{% load sgr %}<div data-total="{{ total }}" data-parametros="{{ parametros }}" hidden></div>
+  <p class="resumen-resultados" aria-live="polite">
+    {% if total %}Mostrando <strong>{{ pagina.start_index }}</strong> a <strong>{{ pagina.end_index }}</strong> de <strong>{{ total }}</strong> registro(s){% if filtrado %} que coinciden con el filtro{% endif %}.
+    {% else %}0 registros.{% endif %}
+  </p>
+
+  <div class="tabla-contenedor">
+    <div class="cargando-capa" role="status"><span class="spinner"></span>Cargando…</div>
+    {% if filas %}
+    <table class="tabla">
+      <thead><tr>{% for c in columnas %}<th scope="col">{{ c.titulo }}</th>{% endfor %}<th scope="col">Acciones</th></tr></thead>
+      <tbody>
+      {% for fila in filas %}
+        <tr>
+          {% for celda in fila.celdas %}
+            <td>{% if celda.tipo == "estado" %}{% estado celda.valor %}{% elif celda.tipo == "enlace" %}<a class="enlace-registro" href="{% url modulo|add:':detalle' fila.obj.pk %}">{{ celda.valor|valor }}</a>{% else %}{{ celda.valor|valor }}{% endif %}</td>
+          {% endfor %}
+          <td>{% include "crud/_acciones_fila.html" %}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% elif filtrado %}
+      <div class="vacio">{% icono "lupa" %}<strong>Sin coincidencias</strong>No hay registros que coincidan con «{{ q|default:"el filtro aplicado" }}». Pruebe con otro término o <a href="?">limpie los filtros</a>.</div>
+    {% elif not hay_registros %}
+      <div class="vacio">{% icono "documento" %}<strong>No hay registros</strong>Aún no se han creado {{ titulo|lower }}{% if puede_crear %}. Use «{{ nuevo_texto }}» para comenzar{% endif %}.</div>
+    {% endif %}
+  </div>
+
+  {% include "crud/_paginador.html" %}

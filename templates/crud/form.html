@@ -12,7 +12,7 @@
 <section class="panel">
   <p class="nota-obligatorios">Los campos marcados con <span class="obligatorio">*</span> son obligatorios.</p>
   {% for e in form.non_field_errors %}<div class="alerta" role="alert">{% icono "alerta" %}{{ e }}</div>{% endfor %}
-  <form method="post" data-proteger data-validar data-un-envio novalidate>
+  <form method="post" enctype="multipart/form-data" data-proteger data-validar data-un-envio novalidate>
     {% csrf_token %}
     {% block campos %}
     <div class="form-grilla">

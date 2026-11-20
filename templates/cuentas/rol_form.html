@@ -2,7 +2,6 @@
 {% load sgr %}
 {% block campos %}
 <div class="form-grilla">
-  {% include "crud/_campo.html" with campo=form.codigo %}
   {% include "crud/_campo.html" with campo=form.nombre %}
   {% include "crud/_campo.html" with campo=form.descripcion %}
   {% include "crud/_campo.html" with campo=form.alcance %}

@@ -289,6 +289,75 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--rojo); width: 
 .swal2-styled { font-family: var(--fuente-texto) !important; font-weight: 600 !important; }
 .swal2-styled:focus { box-shadow: 0 0 0 3px var(--rojo-16) !important; }
 
+
+/* --- Etapa 3: semáforo, dashboards y tubo de trabajo --------------------------
+   Por decisión del cliente, verde y ámbar se usan SOLO en el semáforo y en los
+   estados del tubo, siempre acompañados de texto e ícono. */
+:root { --verde: #1E7B34; --verde-10: rgba(30, 123, 52, .1); --ambar: #A86400; --ambar-10: rgba(214, 140, 0, .14); }
+.semaforo { display: inline-flex; align-items: center; gap: 5px; font-size: .78rem; font-weight: 700; padding: 1px 9px 1px 3px; border-radius: 999px; border: 1px solid; white-space: nowrap; }
+.semaforo__luz { width: 17px; height: 17px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: #fff; font-size: .7rem; }
+.semaforo-verde { color: var(--verde); border-color: var(--verde); background: var(--verde-10); }
+.semaforo-verde .semaforo__luz { background: var(--verde); }
+.semaforo-amarillo { color: #6B4500; border-color: var(--ambar); background: var(--ambar-10); }
+.semaforo-amarillo .semaforo__luz { background: var(--ambar); }
+.semaforo-rojo { color: var(--rojo); border-color: var(--rojo); background: var(--rojo-08); }
+.semaforo-rojo .semaforo__luz { background: var(--rojo); }
+.semaforo-sin_meta { color: var(--gris-500); border-color: var(--gris-300); background: var(--gris-50); }
+.semaforo-sin_meta .semaforo__luz { background: var(--gris-300); }
+.barra-cumplimiento { position: relative; height: 22px; background: var(--gris-100); border: 1px solid var(--gris-200); border-radius: 6px; overflow: hidden; }
+.barra-cumplimiento__relleno { height: 100%; }
+.barra-verde .barra-cumplimiento__relleno { background: var(--verde); }
+.barra-amarillo .barra-cumplimiento__relleno { background: var(--ambar); }
+.barra-rojo .barra-cumplimiento__relleno { background: var(--rojo); }
+.barra-cumplimiento__texto { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: .78rem; font-weight: 700; color: var(--negro); text-shadow: 0 0 3px #fff, 0 0 3px #fff; }
+.pestanas { display: flex; gap: 4px; flex-wrap: wrap; border-bottom: 2px solid var(--gris-200); margin-bottom: 12px; }
+.pestanas a { padding: 8px 14px; text-decoration: none; color: var(--gris-700); font-weight: 600; border-bottom: 3px solid transparent; margin-bottom: -2px; }
+.pestanas a[aria-current="page"] { color: var(--rojo); border-bottom-color: var(--rojo); }
+.leyenda-semaforo { font-size: .82rem; color: var(--gris-700); display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 0 0 14px; }
+.campo-meta { max-width: 84px; min-height: 34px; padding: 4px 8px; text-align: right; }
+.tabla-metas td, .tabla-metas th { padding: 6px 8px; }
+
+.indicadores-tubo { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 18px; }
+.indicador { background: var(--blanco); border: 1px solid var(--gris-200); border-left: 5px solid; border-radius: 6px; padding: 16px 18px; display: flex; flex-direction: column; gap: 4px; box-shadow: var(--sombra); }
+.indicador__titulo { font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: var(--gris-700); font-weight: 700; }
+.indicador__valor { font-family: var(--fuente-titulo); font-size: 2rem; font-weight: 700; line-height: 1.1; }
+.indicador__detalle { font-size: .84rem; color: var(--gris-500); }
+.ind-rojo { border-left-color: var(--rojo); } .ind-rojo .indicador__valor { color: var(--rojo); }
+.ind-verde { border-left-color: var(--verde); } .ind-verde .indicador__valor { color: var(--verde); }
+.ind-ambar { border-left-color: var(--ambar); } .ind-ambar .indicador__valor { color: var(--ambar); }
+.kanban { display: grid; grid-template-columns: repeat(4, minmax(220px, 1fr)); gap: 14px; overflow-x: auto; padding-bottom: 6px; }
+.kanban__columna { background: #F4ECE8; border-radius: 8px; padding: 14px; min-height: 240px; }
+.kanban__cabecera { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--gris-200); padding-bottom: 10px; margin-bottom: 12px; }
+.kanban__cabecera h2 { font-size: .95rem; letter-spacing: .08em; text-transform: uppercase; margin: 0; }
+.col-ingresado h2 { color: var(--gris-700); } .col-pendiente h2 { color: var(--rojo); }
+.col-en_proceso h2 { color: var(--ambar); } .col-realizado h2 { color: var(--verde); }
+.kanban__conteo { background: var(--blanco); border: 1px solid var(--gris-200); border-radius: 999px; min-width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: .8rem; }
+.kanban__vacio { color: var(--gris-500); font-size: .85rem; text-align: center; padding: 20px 0; }
+.tarjeta-tubo { background: var(--blanco); border: 1px solid var(--gris-200); border-left: 4px solid var(--gris-500); border-radius: 4px; padding: 12px 14px; margin-bottom: 12px; box-shadow: var(--sombra); font-size: .88rem; }
+.col-pendiente .tarjeta-tubo { border-left-color: var(--rojo); } .col-en_proceso .tarjeta-tubo { border-left-color: var(--ambar); }
+.col-realizado .tarjeta-tubo { border-left-color: var(--verde); }
+.tarjeta-tubo p { margin: 4px 0; }
+.tarjeta-tubo__codigos { display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 6px; }
+.tarjeta-tubo__codigo { font-family: ui-monospace, Consolas, monospace; font-weight: 700; font-size: .8rem; color: var(--gris-700); }
+.col-pendiente .tarjeta-tubo__codigo { color: var(--rojo); } .col-en_proceso .tarjeta-tubo__codigo { color: var(--ambar); } .col-realizado .tarjeta-tubo__codigo { color: var(--verde); }
+.tarjeta-tubo__titulo { font-size: 1rem; margin: 0 0 6px; }
+.tarjeta-tubo__titulo.tachado { text-decoration: line-through; color: var(--gris-500); }
+.tarjeta-tubo__apoyo { color: var(--gris-700); }
+.tarjeta-tubo__pie { display: flex; justify-content: space-between; align-items: center; gap: 8px; border-top: 1px dashed var(--gris-200); padding-top: 8px; margin-top: 8px; flex-wrap: wrap; }
+.btn-estado { background: var(--ambar-10); border: 1px solid rgba(214, 140, 0, .35); color: var(--negro); font: 700 .78rem var(--fuente-texto); padding: 5px 9px; border-radius: 4px; cursor: pointer; text-decoration: none; }
+.btn-estado:hover { background: rgba(214, 140, 0, .25); }
+.estado-concluido { color: var(--verde); font-weight: 700; display: inline-flex; gap: 4px; align-items: center; }
+.historial { list-style: none; padding: 0; margin: 0; border-left: 3px solid var(--gris-200); }
+.historial li { padding: 4px 0 10px 12px; position: relative; }
+.historial li::before { content: ""; position: absolute; left: -7px; top: 9px; width: 11px; height: 11px; border-radius: 50%; background: var(--rojo); }
+.evidencias { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+.evidencia { margin: 0; border: 1px solid var(--gris-200); border-radius: 8px; overflow: hidden; background: var(--blanco); }
+.evidencia img { width: 100%; height: 160px; object-fit: cover; display: block; background: var(--gris-100); }
+.evidencia figcaption { padding: 10px; font-size: .84rem; display: flex; flex-direction: column; gap: 4px; }
+.evidencia-aprobada { border-color: var(--verde); } .evidencia-rechazada { border-color: var(--rojo); }
+.revision { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+@media (max-width: 900px) { .kanban { grid-template-columns: repeat(4, 260px); } }
+
 /* --- Adaptable -------------------------------------------------------------- */
 @media (max-width: 1100px) {
   .cabecera__sistema span { display: none; }

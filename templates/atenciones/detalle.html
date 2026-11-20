@@ -1,6 +1,7 @@
 {% extends "crud/detalle.html" %}
 {% load sgr %}
 {% block acciones_detalle %}
+  {% if puede.tubo_crear %}<a class="btn btn-secundario" href="{% url 'tubo:crear' %}?atencion={{ obj.pk }}">{% icono "flecha" "icono-sm" %}Derivar al tubo</a>{% endif %}
   {% if puede.atenciones_crear %}<a class="btn btn-primario" href="{% url 'atenciones:crear' %}">{% icono "mas" "icono-sm" %}Ingresar otra atención</a>{% endif %}
 {% endblock %}
 {% block extra_detalle %}

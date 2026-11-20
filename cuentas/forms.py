@@ -9,6 +9,7 @@ from core.crud import FormularioBase
 from core.permisos import MODULOS, TODOS_LOS_PERMISOS
 
 from .models import Rol, Usuario
+from .servicios import generar_clave_provisoria
 
 
 # --- Acceso y recuperación ---------------------------------------------------
@@ -88,11 +89,11 @@ class RolForm(FormularioBase):
         label="Permisos", required=False, choices=[(p, p) for p in TODOS_LOS_PERMISOS],
         widget=forms.CheckboxSelectMultiple,
     )
-    unicos = {"codigo": "Ya existe un rol con este código.", "nombre": "Ya existe un rol con este nombre."}
+    unicos = {"nombre": "Ya existe un rol con este nombre."}
 
     class Meta:
         model = Rol
-        fields = ["codigo", "nombre", "descripcion", "alcance", "activo", "permisos"]
+        fields = ["nombre", "descripcion", "alcance", "activo", "permisos"]
         widgets = {"descripcion": forms.Textarea}
         labels = {"activo": "Activo"}
 
@@ -146,17 +147,13 @@ class RolForm(FormularioBase):
 
 # --- Usuarios ----------------------------------------------------------------
 class UsuarioForm(FormularioBase):
-    clave1 = forms.CharField(label="Contraseña", required=False, strip=False, max_length=64,
-                             widget=forms.PasswordInput(attrs={"autocomplete": "new-password"}))
-    clave2 = forms.CharField(label="Confirmar contraseña", required=False, strip=False, max_length=64,
-                             widget=forms.PasswordInput(attrs={"autocomplete": "new-password"}))
     unicos = {"username": "Ya existe un usuario con este nombre de usuario.",
               "correo": "Ya existe un usuario con este correo."}
     minimos = {"nombre": 3, "username": 3}
 
     class Meta:
         model = Usuario
-        fields = ["nombre", "username", "correo", "rol", "delegaciones", "is_active"]
+        fields = ["nombre", "username", "correo", "rol", "cargo", "delegaciones", "is_active"]
         widgets = {"delegaciones": forms.CheckboxSelectMultiple}
         labels = {"is_active": "Activo"}
 
@@ -178,15 +175,8 @@ class UsuarioForm(FormularioBase):
             "Rol de una delegación: marque una. Varias delegaciones: marque al menos una. "
             "Alcance global: opcional.")
         self.fields["username"].widget.attrs.update({"pattern": "[A-Za-z0-9._-]{3,30}", "autocomplete": "off"})
-        for nombre in ("clave1", "clave2"):
-            self.fields[nombre].widget.attrs["class"] = "campo-input"
-        if self.instance.pk:
-            self.fields["clave1"].label = "Nueva contraseña (opcional)"
-            self.fields["clave1"].help_text = "Déjela en blanco para mantener la contraseña actual."
-        else:
-            for nombre in ("clave1", "clave2"):
-                self.fields[nombre].required = True
-                self.fields[nombre].widget.attrs["required"] = True
+        self.fields["cargo"].choices = [("", "Sin cargo (administración)")] + list(self.fields["cargo"].choices)[1:]
+        self.clave_provisoria = None
         if self.instance.pk and self.instance.pk == editor.pk:
             self.fields["rol"].disabled = True
             self.fields["is_active"].disabled = True
@@ -211,15 +201,6 @@ class UsuarioForm(FormularioBase):
                 self.add_error("delegaciones", "El rol seleccionado trabaja con una sola delegación: marque exactamente una.")
             elif rol.alcance == "MULTIPLE" and total < 1:
                 self.add_error("delegaciones", "Marque al menos una delegación autorizada.")
-        c1, c2 = datos.get("clave1"), datos.get("clave2")
-        if c1 or c2:
-            if c1 != c2:
-                self.add_error("clave2", "Las contraseñas no coinciden.")
-            elif c1:
-                try:
-                    validate_password(c1, self.instance if self.instance.pk else None)
-                except ValidationError as e:
-                    self.add_error("clave1", e)
         return datos
 
     def _delegaciones_fuera_de_alcance(self):
@@ -232,8 +213,12 @@ class UsuarioForm(FormularioBase):
     def save(self, commit=True):
         fuera = self._delegaciones_fuera_de_alcance()
         usuario = super().save(commit=False)
-        if self.cleaned_data.get("clave1"):
-            usuario.set_password(self.cleaned_data["clave1"])
+        if not usuario.pk:
+            # Usuario nuevo: el sistema genera una clave provisoria que se envía por correo
+            # y que debe cambiarse en el primer ingreso.
+            self.clave_provisoria = generar_clave_provisoria()
+            usuario.set_password(self.clave_provisoria)
+            usuario.debe_cambiar_clave = True
         usuario.save()
         usuario.delegaciones.set(list(self.cleaned_data.get("delegaciones") or []) + fuera)
         return usuario

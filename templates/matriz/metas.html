@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% load sgr %}
+{% block titulo %}Metas · {{ obj.nombre }}{% endblock %}
+{% block migas %}<nav class="migas" aria-label="Ruta"><a href="{% url 'core:inicio' %}">Gestión municipal</a> / <a href="{% url 'trimestres:lista' %}">Trimestres</a> / <a href="{% url 'trimestres:detalle' obj.pk %}">{{ obj.codigo }}</a> / Metas</nav>{% endblock %}
+{% block contenido %}
+<div class="encabezado">
+  <div>
+    <h1>Metas de {{ obj.nombre }}</h1>
+    <p>Cantidad de actividades válidas esperadas en el trimestre por ítem y cargo. Deje 0 o vacío si el ítem no aplica al cargo.
+       Las ausencias del funcionario ajustan su meta automáticamente.</p>
+  </div>
+</div>
+<section class="panel">
+  <form method="post" data-proteger data-un-envio>
+    {% csrf_token %}
+    <div class="tabla-contenedor">
+      <table class="tabla tabla-metas">
+        <thead><tr><th scope="col">Ítem</th>{% for c, nombre in cargos %}<th scope="col">{{ nombre }}</th>{% endfor %}</tr></thead>
+        <tbody>
+        {% for fila in filas %}
+          <tr>
+            <th scope="row" style="text-transform:none;font-family:inherit;font-size:.88rem;background:none">{{ fila.item.codigo }} · {{ fila.item.nombre }}{% if fila.item.es_felicitacion %} <span class="chip">Felicitación</span>{% endif %}</th>
+            {% for c in fila.celdas %}
+              <td><input class="campo-input campo-meta" type="number" min="0" max="999" step="1" inputmode="numeric"
+                         name="{{ c.nombre }}" value="{{ c.valor }}" aria-label="{{ fila.item.nombre }} – {{ c.cargo }}"></td>
+            {% endfor %}
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="botonera">
+      <a class="btn btn-neutro" data-cancelar href="{% url 'trimestres:detalle' obj.pk %}">Cancelar</a>
+      <button class="btn btn-primario" type="submit">{% icono "check" "icono-sm" %}Guardar metas</button>
+    </div>
+  </form>
+</section>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% load sgr %}
+<div class="encabezado">
+  <div>
+    <h1>{{ titulo_dash }}</h1>
+    <p>{{ subtitulo_dash }}</p>
+  </div>
+  <form method="get" class="barra" style="margin:0">
+    {% for k, v in request.GET.items %}{% if k != "trimestre" %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endif %}{% endfor %}
+    <div>
+      <label for="sel-trimestre">Trimestre</label>
+      <select class="campo-select" id="sel-trimestre" name="trimestre" onchange="this.form.submit()">
+        {% for t in trimestres %}<option value="{{ t.pk }}" {% if t.pk == trimestre.pk %}selected{% endif %}>{{ t.nombre }} ({{ t.get_estado_display }})</option>{% endfor %}
+      </select>
+    </div>
+    <noscript><button class="btn btn-neutro" type="submit">Ver</button></noscript>
+  </form>
+</div>
+<nav class="pestanas" aria-label="Vistas del dashboard">
+  {% for clave, etiqueta, url, permitido in pestanas %}{% if permitido %}
+    <a href="{{ url }}{% if trimestre %}?trimestre={{ trimestre.pk }}{% endif %}" {% if clave == vista %}aria-current="page"{% endif %}>{{ etiqueta }}</a>
+  {% endif %}{% endfor %}
+</nav>
+<p class="leyenda-semaforo">{% icono "info" "icono-sm" %} Semáforo: {% include "matriz/_semaforo.html" with c="VERDE" %} ≥ 100 % · {% include "matriz/_semaforo.html" with c="AMARILLO" %} 70 % a 99 % · {% include "matriz/_semaforo.html" with c="ROJO" %} &lt; 70 %. Cada ítem tiene un tope de 120 %.</p>

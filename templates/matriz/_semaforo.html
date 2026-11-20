@@ -1,0 +1,5 @@
+{# Indicador de semáforo: color + ícono + texto (el color no es el único identificador). #}
+<span class="semaforo semaforo-{{ c|lower }}" title="{% if c == 'VERDE' %}Cumple la meta (≥ 100 %){% elif c == 'AMARILLO' %}En riesgo (70 % a 99 %){% elif c == 'ROJO' %}Bajo la meta (< 70 %){% else %}Sin meta exigible{% endif %}">
+  <span class="semaforo__luz" aria-hidden="true">{% if c == "VERDE" %}✓{% elif c == "AMARILLO" %}!{% elif c == "ROJO" %}✕{% else %}–{% endif %}</span>
+  {% if c == "VERDE" %}Verde{% elif c == "AMARILLO" %}Amarillo{% elif c == "ROJO" %}Rojo{% else %}Sin meta{% endif %}
+</span>

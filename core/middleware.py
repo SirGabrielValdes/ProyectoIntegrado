@@ -35,3 +35,19 @@ class ContextoDelegacionMiddleware:
             request.delegacion_activa = activa
             request.delegaciones_autorizadas = autorizadas
         return self.get_response(request)
+
+
+class CambioClaveObligatorioMiddleware:
+    """Mientras el usuario tenga una clave provisoria, solo puede cambiarla o cerrar sesión."""
+
+    PERMITIDAS = ("/cuenta/cambiar-clave/", "/cuenta/salir/", "/static/", "/salud/")
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        usuario = getattr(request, "user", None)
+        if (usuario is not None and usuario.is_authenticated and usuario.debe_cambiar_clave
+                and not request.path.startswith(self.PERMITIDAS)):
+            return redirect("cuentas:cambiar_clave")
+        return self.get_response(request)

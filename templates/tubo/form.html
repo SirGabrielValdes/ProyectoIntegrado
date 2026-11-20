@@ -1,0 +1,10 @@
+{% extends "crud/form.html" %}
+{% load sgr %}
+{% block campos %}
+{% if form.origen %}<div class="alerta alerta-neutra">{% icono "info" %}<span>Derivado desde <strong>{% if form.origen.codigo %}{{ form.origen.codigo }}{% else %}{{ form.origen.folio }}{% endif %}</strong>. Los datos se precargaron y pueden ajustarse.</span></div>
+<input type="hidden" name="{% if form.origen.codigo %}actividad{% else %}atencion{% endif %}" value="{{ form.origen.pk }}">{% endif %}
+<div class="form-grilla">
+  {% for campo in form %}{% include "crud/_campo.html" %}{% endfor %}
+</div>
+<p class="registro-automatico" style="margin-top:14px">{% icono "candado" "icono-sm" %}<span>El código TUB, la delegación y el estado inicial «Ingresado» se asignan automáticamente.</span></p>
+{% endblock %}

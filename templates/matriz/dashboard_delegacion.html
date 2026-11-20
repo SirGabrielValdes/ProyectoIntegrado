@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% load sgr %}
+{% block titulo %}Dashboard por delegación{% endblock %}
+{% block migas %}<nav class="migas" aria-label="Ruta"><a href="{% url 'core:inicio' %}">Gestión municipal</a> / Dashboards / Delegación</nav>{% endblock %}
+{% block contenido %}
+{% include "matriz/_cabecera_dashboard.html" with titulo_dash="Dashboard por delegación" subtitulo_dash="Cumplimiento del equipo de la delegación activa." %}
+{% if not trimestre %}
+  <div class="vacio">{% icono "calendario" %}<strong>No hay trimestres</strong>Configure un trimestre de evaluación para ver el semáforo.</div>
+{% else %}
+<div class="grilla-tarjetas">
+  <div class="tarjeta"><div class="tarjeta__valor">{{ resumen.total|porcentaje }}</div><div class="tarjeta__titulo">{{ resumen.delegacion.codigo }} · {{ resumen.delegacion.nombre }}</div><div class="tarjeta__detalle">{% include "matriz/_semaforo.html" with c=resumen.color %}</div></div>
+  <div class="tarjeta"><div class="tarjeta__valor">{{ resumen.actividades }}</div><div class="tarjeta__titulo">Actividades registradas</div><div class="tarjeta__detalle">{{ resumen.validas }} suman puntaje</div></div>
+  <div class="tarjeta"><div class="tarjeta__valor">{{ resumen.funcionarios|length }}</div><div class="tarjeta__titulo">Funcionarios con meta</div><div class="tarjeta__detalle">Equipo de la delegación</div></div>
+</div>
+<div>
+  <section class="panel">
+    <h2 class="panel__titulo">{% icono "meta" %}Cumplimiento del equipo por ítem</h2>
+    <div class="tabla-contenedor"><table class="tabla">
+      <thead><tr><th scope="col">Ítem</th><th scope="col">Puntos</th><th scope="col">Meta ajustada</th><th scope="col">Cumplimiento</th></tr></thead>
+      <tbody>{% for i in resumen.items %}<tr><td>{{ i.item.nombre }}</td><td>{{ i.puntos }}</td><td>{{ i.meta_ajustada }}</td><td style="min-width:150px">{% include "matriz/_barra.html" with valor=i.cumplimiento c=i.color %}</td></tr>
+      {% empty %}<tr><td colspan="4">Sin metas definidas para los cargos del equipo.</td></tr>{% endfor %}</tbody>
+    </table></div>
+  </section>
+  <section class="panel">
+    <h2 class="panel__titulo">{% icono "personas" %}Semáforo por funcionario</h2>
+    <div class="tabla-contenedor"><table class="tabla">
+      <thead><tr><th scope="col">Funcionario</th><th scope="col">Cargo</th><th scope="col">Ausencia</th><th scope="col">Cumplimiento</th><th scope="col">Semáforo</th></tr></thead>
+      <tbody>{% for f in resumen.funcionarios %}<tr>
+        <td><a class="enlace-registro" href="{% url 'dashboard:funcionario' %}?funcionario={{ f.funcionario.pk }}&trimestre={{ trimestre.pk }}">{{ f.funcionario.nombre }}</a></td>
+        <td>{{ f.funcionario.get_cargo_display }}</td><td>{{ f.dias_ausencia }} día(s)</td>
+        <td style="min-width:140px">{% include "matriz/_barra.html" with valor=f.total c=f.color %}</td>
+        <td>{% include "matriz/_semaforo.html" with c=f.color %}</td></tr>
+      {% empty %}<tr><td colspan="5">La delegación no tiene funcionarios con cargo asignado.</td></tr>{% endfor %}</tbody>
+    </table></div>
+    {% if puede.ausencias_crear %}<p style="margin-top:10px"><a class="btn btn-secundario" href="{% url 'ausencias:lista' %}">{% icono "reloj" "icono-sm" %}Ingresar días libres, vacaciones o licencias</a></p>{% endif %}
+  </section>
+</div>
+{% endif %}
+{% endblock %}
