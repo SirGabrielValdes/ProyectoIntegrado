@@ -470,16 +470,16 @@ def ui_tubo(c):
     return "28..31_*.png"
 
 
-def arrastrar(pg, origen, destino):
-    """Arrastra con el mouse (SortableJS en modo puntero, igual que en pantallas táctiles)."""
+def arrastrar(pg, origen, destino, dy=60, pasos=15):
+    """Arrastra con el mouse (SortableJS en modo puntero, igual que en pantallas táctiles).
+    dy: altura dentro del destino donde se suelta; pasos: menos pasos = arrastre más rápido."""
     a = pg.locator(origen).first.bounding_box()
     b = pg.locator(destino).first.bounding_box()
     pg.mouse.move(a["x"] + a["width"] / 2, a["y"] + 20)
     pg.mouse.down()
-    pasos = 15
     for i in range(1, pasos + 1):
         pg.mouse.move(a["x"] + a["width"] / 2 + (b["x"] + b["width"] / 2 - a["x"] - a["width"] / 2) * i / pasos,
-                      a["y"] + 20 + (b["y"] + 60 - a["y"] - 20) * i / pasos)
+                      a["y"] + 20 + (b["y"] + dy - a["y"] - 20) * i / pasos)
         pg.wait_for_timeout(30)
     pg.mouse.up()
     pg.wait_for_timeout(300)
@@ -506,8 +506,14 @@ def ui_arrastre_tubo(c):
     pg.click(".swal2-cancel")
     mensajes(pg)
     assert codigo in pg.inner_text(".col-ingresado")
-    # 3) Etapa siguiente confirmada: se guarda.
-    arrastrar(pg, ".col-ingresado .tarjeta-tubo", ".col-pendiente .kanban__lista")
+    # 2b) Arrastre rápido (un solo movimiento) a la columna siguiente: también se acepta.
+    arrastrar(pg, ".col-ingresado .tarjeta-tubo", ".col-pendiente", dy=200, pasos=1)
+    texto = swal(pg)
+    assert "Mover compromiso" in texto and codigo in texto, texto
+    pg.click(".swal2-cancel")
+    mensajes(pg)
+    # 3) Etapa siguiente confirmada, soltando sobre la cabecera de la columna: se guarda.
+    arrastrar(pg, ".col-ingresado .tarjeta-tubo", ".col-pendiente .kanban__cabecera", dy=12)
     swal(pg)
     pg.click(".swal2-confirm")
     pg.wait_for_url(url + "/tubo/")

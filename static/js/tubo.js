@@ -6,7 +6,7 @@
   var form = document.getElementById("form-arrastre");
   var Alerta = window.SGR && window.SGR.Alerta;
 
-  // Última posición del puntero: la tarjeta solo se mueve si se SUELTA sobre la columna siguiente.
+  // Última posición conocida del puntero (respaldo si el evento de soltar no trae coordenadas).
   var puntero = { x: 0, y: 0 };
   ["pointermove", "mousemove"].forEach(function (tipo) {
     document.addEventListener(tipo, function (e) { puntero.x = e.clientX; puntero.y = e.clientY; }, { passive: true });
@@ -15,10 +15,26 @@
     if (e.touches && e.touches[0]) { puntero.x = e.touches[0].clientX; puntero.y = e.touches[0].clientY; }
   }, { passive: true });
 
-  function soltadaSobre(lista) {
-    var el = document.elementFromPoint(puntero.x, puntero.y);
-    var columna = el && el.closest(".kanban__columna");
-    return columna !== null && columna.contains(lista);
+  // Punto exacto donde se soltó la tarjeta (mouse, lápiz o dedo).
+  function puntoFinal(evt) {
+    var e = evt.originalEvent;
+    if (e && e.changedTouches && e.changedTouches[0]) return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
+    if (e && typeof e.clientX === "number" && (e.clientX || e.clientY)) return { x: e.clientX, y: e.clientY };
+    return { x: puntero.x, y: puntero.y };
+  }
+
+  // Columna del tablero bajo ese punto (cualquier parte: cabecera, tarjetas o espacio libre),
+  // ignorando la copia flotante de la tarjeta que sigue al puntero.
+  function columnaEn(punto) {
+    var capas = document.elementsFromPoint ? document.elementsFromPoint(punto.x, punto.y)
+                                           : [document.elementFromPoint(punto.x, punto.y)];
+    for (var i = 0; i < capas.length; i++) {
+      var el = capas[i];
+      if (!el || el.closest(".sortable-fallback")) continue;
+      var col = el.closest(".kanban__columna");
+      if (col && tablero.contains(col)) return col;
+    }
+    return null;
   }
 
   function nombreEtapa(estado) {
@@ -70,15 +86,27 @@
         tablero.querySelectorAll(".kanban__lista--destino").forEach(function (l) {
           l.classList.remove("kanban__lista--destino");
         });
-        var tarjeta = evt.item, destino = evt.to;
-        if (evt.from === evt.to || !soltadaSobre(destino)) {
+        var tarjeta = evt.item, siguiente = tarjeta.dataset.siguiente;
+        // La decisión depende SOLO de la columna sobre la que se soltó, no de dónde alcanzó
+        // a insertar la tarjeta la librería durante el arrastre.
+        var columna = columnaEn(puntoFinal(evt));
+        var destino = columna && columna.querySelector(".kanban__lista");
+        if (destino === evt.from) {            // se soltó en su misma columna: sin cambios
           if (evt.from !== evt.to) devolver(evt);
-          if (!soltadaSobre(evt.from) && tarjeta.dataset.siguiente) {
+          return;
+        }
+        if (!destino || destino.dataset.estado !== siguiente) {
+          devolver(evt);
+          if (siguiente) {
             aviso("info", "Movimiento no permitido",
                   tarjeta.dataset.codigo + " solo puede avanzar a la etapa siguiente: «" +
-                  nombreEtapa(tarjeta.dataset.siguiente) + "». Suelte la tarjeta sobre esa columna.");
+                  nombreEtapa(siguiente) + "». Suelte la tarjeta sobre esa columna.");
           }
           return;
+        }
+        if (tarjeta.parentNode !== destino) {  // se soltó en la columna correcta: la tarjeta queda ahí
+          var vacio = destino.querySelector(".kanban__vacio");
+          destino.insertBefore(tarjeta, vacio || destino.firstChild);
         }
         if (destino.dataset.estado === "REALIZADO" && tarjeta.dataset.evidenciaAprobada !== "1") {
           devolver(evt);
