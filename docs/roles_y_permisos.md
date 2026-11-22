@@ -8,10 +8,10 @@ modificarse desde el mantenedor **Roles**.
 
 | Código | Rol | Alcance | Descripción |
 |---|---|---|---|
-| ROL01 | Superadministrador | Global (todas las delegaciones) | Administra todo el sistema. Rol protegido: no se elimina, no se desactiva y conserva todos los permisos. |
-| ROL02 | Coordinador | Varias delegaciones autorizadas | Coordina varias delegaciones: administra usuarios de sus delegaciones y los catálogos de atención. |
-| ROL03 | Delegado municipal | Una delegación | Responsable de una delegación: consulta su equipo y catálogos, registra y supervisa atenciones. |
-| ROL04 | Funcionario | Una delegación | Operador de atención ciudadana: registra y consulta atenciones de su delegación. |
+| ROL-00001 | Superadministrador | Global (todas las delegaciones) | Administra todo el sistema. Rol protegido: no se elimina, no se desactiva y conserva todos los permisos. |
+| ROL-00002 | Coordinador | Varias delegaciones autorizadas | Coordina varias delegaciones: administra usuarios de sus delegaciones y los catálogos de atención. |
+| ROL-00003 | Delegado municipal | Una delegación | Responsable de una delegación: consulta su equipo y catálogos, registra y supervisa atenciones. |
+| ROL-00004 | Funcionario | Una delegación | Operador de atención ciudadana: registra y consulta atenciones de su delegación. |
 
 ## Matriz de permisos
 

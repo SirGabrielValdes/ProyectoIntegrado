@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load sgr %}
+{% load static sgr %}
 {% block titulo %}Tubo de trabajo{% endblock %}
 {% block migas %}<nav class="migas" aria-label="Ruta"><a href="{% url 'core:inicio' %}">Gestión municipal</a> / Tubo de trabajo</nav>{% endblock %}
 {% block contenido %}
@@ -32,12 +32,17 @@
   {% if q or responsable_sel %}<a class="btn btn-neutro" href="?">Limpiar</a>{% endif %}
 </form>
 
-<div class="kanban">
+{% if puede.tubo_editar %}<p class="ayuda" id="ayuda-arrastre">{% icono "info" "icono-sm" %} Arrastre una tarjeta a la columna siguiente para avanzarla (también puede usar los botones de cada tarjeta). Para pasar a «Realizados» se necesita una foto de evidencia aprobada.</p>{% endif %}
+<div class="kanban" {% if puede.tubo_editar %}data-tablero-arrastrable{% endif %}>
   {% for col in columnas %}
   <section class="kanban__columna col-{{ col.estado|lower }}" aria-labelledby="col-{{ col.estado }}">
     <header class="kanban__cabecera"><h2 id="col-{{ col.estado }}">{{ forloop.counter }}. {{ col.nombre }}</h2><span class="kanban__conteo">{{ col.items|length }}</span></header>
+    <div class="kanban__lista" data-estado="{{ col.estado }}" data-nombre="{{ col.nombre }}">
     {% for c in col.items %}
-    <article class="tarjeta-tubo">
+    <article class="tarjeta-tubo" data-pk="{{ c.pk }}" data-codigo="{{ c.codigo }}" data-estado="{{ c.estado }}"
+             data-siguiente="{{ c.siguiente.0|default:'' }}" data-evidencia-aprobada="{% if c.tiene_evidencia_aprobada %}1{% else %}0{% endif %}"
+             data-url-avanzar="{% url 'tubo:avanzar' c.pk %}" data-url-detalle="{% url 'tubo:detalle' c.pk %}"
+             {% if puede.tubo_editar and c.siguiente %}aria-describedby="ayuda-arrastre"{% endif %}>
       <div class="tarjeta-tubo__codigos"><span class="tarjeta-tubo__codigo">{{ c.codigo }}</span>{% if c.referencia %}<span class="chip">{{ c.referencia }}</span>{% endif %}</div>
       <h3 class="tarjeta-tubo__titulo{% if c.estado == 'REALIZADO' %} tachado{% endif %}">{{ c.titulo }}</h3>
       <p><strong>Solicitante:</strong> {{ c.solicitante }}</p>
@@ -56,7 +61,15 @@
       </footer>
     </article>
     {% empty %}<p class="kanban__vacio">Sin compromisos.</p>{% endfor %}
+    </div>
   </section>
   {% endfor %}
 </div>
+{% endblock %}
+{% block scripts %}
+{% if puede.tubo_editar %}
+<form method="post" id="form-arrastre" hidden>{% csrf_token %}<input type="hidden" name="destino"><input type="hidden" name="volver" value="tablero"><input type="hidden" name="comentario" value="Movido desde el tablero."></form>
+<script src="{% static 'vendor/sortablejs/Sortable.min.js' %}"></script>
+<script src="{% static 'js/tubo.js' %}"></script>
+{% endif %}
 {% endblock %}

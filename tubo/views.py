@@ -180,7 +180,8 @@ class CompromisosMantenedor(Mantenedor):
     def vista_avanzar(self, request, pk):
         obj = self.obtener(request, pk)
         try:
-            obj = servicios.avanzar(obj, request.user, request.POST.get("comentario", ""))
+            obj = servicios.avanzar(obj, request.user, request.POST.get("comentario", ""),
+                                    destino=request.POST.get("destino") or None)
         except ValidationError as e:
             messages.error(request, " ".join(e.messages))
         else:

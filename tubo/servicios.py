@@ -28,13 +28,20 @@ def validar_foto(archivo):
 
 
 @transaction.atomic
-def avanzar(compromiso, usuario, comentario=""):
-    """Mueve el compromiso al siguiente estado del tubo y deja registro en el historial."""
+def avanzar(compromiso, usuario, comentario="", destino=None):
+    """
+    Mueve el compromiso al siguiente estado del tubo y deja registro en el historial.
+    `destino` (al arrastrar en el tablero) debe ser exactamente la etapa siguiente.
+    """
     compromiso = Compromiso.objects.select_for_update().get(pk=compromiso.pk)
     siguiente = compromiso.siguiente
     if not siguiente:
         raise ValidationError("El compromiso ya está realizado.")
     nuevo = siguiente[0]
+    if destino and destino != nuevo:
+        nombres = dict(Compromiso.ESTADOS)
+        raise ValidationError(f"{compromiso.codigo} solo puede pasar de «{nombres[compromiso.estado]}» a "
+                              f"«{nombres[nuevo]}»: las etapas avanzan de una en una.")
     if nuevo == "REALIZADO" and not compromiso.tiene_evidencia_aprobada():
         raise ValidationError("Para marcarlo como realizado debe tener al menos una evidencia fotográfica aprobada.")
     anterior = compromiso.estado

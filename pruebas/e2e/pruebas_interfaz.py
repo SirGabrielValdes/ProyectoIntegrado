@@ -470,6 +470,68 @@ def ui_tubo(c):
     return "28..31_*.png"
 
 
+def arrastrar(pg, origen, destino):
+    """Arrastra con el mouse (SortableJS en modo puntero, igual que en pantallas táctiles)."""
+    a = pg.locator(origen).first.bounding_box()
+    b = pg.locator(destino).first.bounding_box()
+    pg.mouse.move(a["x"] + a["width"] / 2, a["y"] + 20)
+    pg.mouse.down()
+    pasos = 15
+    for i in range(1, pasos + 1):
+        pg.mouse.move(a["x"] + a["width"] / 2 + (b["x"] + b["width"] / 2 - a["x"] - a["width"] / 2) * i / pasos,
+                      a["y"] + 20 + (b["y"] + 60 - a["y"] - 20) * i / pasos)
+        pg.wait_for_timeout(30)
+    pg.mouse.up()
+    pg.wait_for_timeout(300)
+
+
+@caso("UI-16", "Tubo de trabajo: arrastrar tarjetas solo a la etapa siguiente, con confirmación y regla de evidencia")
+def ui_arrastre_tubo(c):
+    pg, url = c["pg"], c["url"]
+    entrar(pg, url, "delegado")
+    pg.goto(url + "/tubo/")
+    codigo = pg.inner_text(".col-ingresado .tarjeta-tubo >> nth=0 >> .tarjeta-tubo__codigo")
+    # 1) Saltar una etapa (Ingresados -> En proceso): la columna no acepta la tarjeta.
+    arrastrar(pg, ".col-ingresado .tarjeta-tubo", ".col-en_proceso .kanban__lista")
+    texto = swal(pg)
+    assert "Movimiento no permitido" in texto and "Pendientes" in texto, texto
+    captura(pg, "35_tubo_arrastre_no_permitido.png")
+    cerrar_swal(pg)
+    assert codigo in pg.inner_text(".col-ingresado"), "La tarjeta debe volver a Ingresados"
+    # 2) Etapa siguiente con cancelación: vuelve a su lugar.
+    arrastrar(pg, ".col-ingresado .tarjeta-tubo", ".col-pendiente .kanban__lista")
+    texto = swal(pg)
+    assert codigo in texto and "Pendientes" in texto, texto
+    captura(pg, "32_tubo_arrastre_confirmar.png")
+    pg.click(".swal2-cancel")
+    mensajes(pg)
+    assert codigo in pg.inner_text(".col-ingresado")
+    # 3) Etapa siguiente confirmada: se guarda.
+    arrastrar(pg, ".col-ingresado .tarjeta-tubo", ".col-pendiente .kanban__lista")
+    swal(pg)
+    pg.click(".swal2-confirm")
+    pg.wait_for_url(url + "/tubo/")
+    assert "movido a «Pendiente»" in mensajes(pg)
+    assert codigo in pg.inner_text(".col-pendiente")
+    captura(pg, "33_tubo_arrastre_guardado.png", completa=True)
+    # 4) A Realizados sin evidencia aprobada: se rechaza y vuelve.
+    pg.click(".col-pendiente .tarjeta-tubo >> nth=0 >> button.btn-estado")
+    swal(pg)
+    pg.click(".swal2-confirm")
+    pg.wait_for_url(url + "/tubo/")
+    mensajes(pg)
+    sin_evidencia = pg.locator(".col-en_proceso .tarjeta-tubo[data-evidencia-aprobada='0']").first
+    if sin_evidencia.count():
+        cod2 = sin_evidencia.get_attribute("data-codigo")
+        arrastrar(pg, f".tarjeta-tubo[data-codigo='{cod2}']", ".col-realizado .kanban__lista")
+        texto = swal(pg)
+        assert "Falta evidencia aprobada" in texto, texto
+        captura(pg, "34_tubo_arrastre_sin_evidencia.png")
+        cerrar_swal(pg)
+        assert cod2 in pg.inner_text(".col-en_proceso")
+    return "32..35_*.png"
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--url", default="http://127.0.0.1:8000")
@@ -484,7 +546,7 @@ def main():
         ctx = {"pg": pg, "url": args.url.rstrip("/"), "log": args.log}
         for prueba in [ui_login_incorrecto, ui_login_vacio, ui_menus_por_rol, ui_recuperacion, ui_listado,
                        ui_eliminar, ui_formulario, ui_cambio_delegacion, ui_atencion, ui_pendiente, ui_403,
-                       ui_movil, ui_clave_provisoria, ui_actividad, ui_tubo]:
+                       ui_movil, ui_clave_provisoria, ui_actividad, ui_tubo, ui_arrastre_tubo]:
             prueba(ctx)
         navegador.close()
     fecha = datetime.now().strftime("%d-%m-%Y %H:%M")

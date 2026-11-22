@@ -421,6 +421,23 @@ class TuboTests(MatrizBase):
                          ["INGRESADO", "PENDIENTE", "EN_PROCESO", "REALIZADO"])
         self.assertEqual(self.client.get(f"/tubo/{c.pk}/evidencias/{e.pk}/foto/").status_code, 200)
 
+    def test_arrastre_solo_a_la_etapa_siguiente(self):
+        """E3-Tubo | Tablero Kanban (arrastrar) | Compromiso Ingresado | Enviar el movimiento con destino «En proceso» (saltando una etapa) y luego con destino «Pendiente» | El salto se rechaza en el servidor; la etapa siguiente se acepta y queda en el historial"""
+        self.entrar("funcionario")
+        c = self.crear_compromiso()
+        r = self.client.post(f"/tubo/{c.pk}/avanzar/", {"destino": "EN_PROCESO", "volver": "tablero"})
+        self.assertRedirects(r, "/tubo/")
+        self.assertMensaje(r, "error", "avanzan de una en una")
+        c.refresh_from_db()
+        self.assertEqual(c.estado, "INGRESADO")
+        r = self.client.post(f"/tubo/{c.pk}/avanzar/", {"destino": "PENDIENTE", "volver": "tablero",
+                                                       "comentario": "Movido desde el tablero."})
+        self.assertMensaje(r, "success", "Pendiente")
+        c.refresh_from_db()
+        self.assertEqual(c.estado, "PENDIENTE")
+        self.assertEqual(c.historial.first().comentario, "Movido desde el tablero.")
+        self.assertContains(self.client.get("/tubo/"), "data-tablero-arrastrable")
+
     def test_rechazo_y_archivos_invalidos(self):
         """E3-Evidencias | Tubo de trabajo | Compromiso ingresado | Subir un archivo que no es imagen; rechazar una foto sin y con motivo | El archivo se rechaza; el rechazo exige motivo y deja la foto rechazada"""
         self.entrar("delegado")

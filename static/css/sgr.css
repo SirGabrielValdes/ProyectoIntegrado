@@ -332,6 +332,11 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--rojo); width: 
 .col-ingresado h2 { color: var(--gris-700); } .col-pendiente h2 { color: var(--rojo); }
 .col-en_proceso h2 { color: var(--ambar); } .col-realizado h2 { color: var(--verde); }
 .kanban__conteo { background: var(--blanco); border: 1px solid var(--gris-200); border-radius: 999px; min-width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: .8rem; }
+.kanban__lista { min-height: 160px; border-radius: 6px; transition: background .15s, outline-color .15s; outline: 2px dashed transparent; outline-offset: 4px; }
+.kanban__lista--destino { background: rgba(255, 255, 255, .55); outline-color: var(--gris-500); }
+[data-tablero-arrastrable] .tarjeta-tubo[data-siguiente]:not([data-siguiente=""]) { cursor: grab; }
+.tarjeta-tubo--elegida { cursor: grabbing; box-shadow: 0 6px 18px rgba(0, 0, 0, .18); }
+.tarjeta-tubo--fantasma { opacity: .45; }
 .kanban__vacio { color: var(--gris-500); font-size: .85rem; text-align: center; padding: 20px 0; }
 .tarjeta-tubo { background: var(--blanco); border: 1px solid var(--gris-200); border-left: 4px solid var(--gris-500); border-radius: 4px; padding: 12px 14px; margin-bottom: 12px; box-shadow: var(--sombra); font-size: .88rem; }
 .col-pendiente .tarjeta-tubo { border-left-color: var(--rojo); } .col-en_proceso .tarjeta-tubo { border-left-color: var(--ambar); }

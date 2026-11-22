@@ -160,7 +160,7 @@ Leyenda: **Operativo** = funciona con persistencia real y está probado · **Sim
 | Matriz de actividades | **Operativo** | Reglas del correo de la Coordinación: nombre y teléfono, delegado como usuario, coordinaciones, 7 por día, cierre semanal y felicitaciones (ver `docs/reglas_matriz.md`) |
 | Ausencias (pestaña del semáforo) | **Operativo** | Las ingresa el delegado y ajustan la meta automáticamente |
 | Dashboards general, por delegación y por funcionario | **Operativo** | Cumplimiento automático con tope de 120 % por ítem y semáforo verde/amarillo/rojo |
-| Tubo de trabajo | **Operativo** | Tablero Ingresados → Pendientes → En proceso → Realizados, historial, áreas de apoyo e indicadores. Se deriva desde actividades y atenciones |
+| Tubo de trabajo | **Operativo** | Tablero Ingresados → Pendientes → En proceso → Realizados (tarjetas arrastrables solo a la etapa siguiente, con confirmación; «Realizados» exige foto aprobada), historial, áreas de apoyo e indicadores. Se deriva desde actividades y atenciones |
 | Evidencias fotográficas | **Operativo** | Carga desde la web o la app; el delegado aprueba o rechaza; «Realizado» exige una evidencia aprobada |
 | API REST para la app móvil | **Operativo** (API) / **Pendiente** (app) | Token, listado de compromisos y carga de fotos (`docs/api_movil.md`). La app móvil es otro proyecto |
 | Ingreso de atención | **Operativo** | Vecino existente o nuevo (RUT validado), Tipo → Sub Atención dependiente, delegación, responsable y fecha automáticos, folio, sin doble envío |
@@ -173,9 +173,9 @@ Leyenda: **Operativo** = funciona con persistencia real y está probado · **Sim
 
 | Tipo | Comando | Resultado | Evidencia |
 |---|---|---|---|
-| Funcionales (105 casos: acceso, recuperación, 6 CRUD, listados, perfiles, delegación, atención y 34 de la Etapa 3: correcciones, matriz, reglas, semáforo, tubo, evidencias y API) | `python manage.py test tests` | 105/105 en SQLite y MariaDB | — |
+| Funcionales (106 casos: acceso, recuperación, 6 CRUD, listados, perfiles, delegación, atención y 35 de la Etapa 3: correcciones, matriz, reglas, semáforo, tubo, arrastre, evidencias y API) | `python manage.py test tests` | 106/106 | — |
 | Matriz de pruebas funcionales | `python pruebas/generar_matriz.py --responsable "Nombre"` | Genera la matriz | [`docs/pruebas/matriz_pruebas_funcionales.xlsx`](docs/pruebas/matriz_pruebas_funcionales.xlsx) / [`.md`](docs/pruebas/matriz_pruebas_funcionales.md) |
-| Interfaz en navegador (15 casos: SweetAlert2, búsqueda en vivo, clave provisoria, matriz, tubo y dashboards) | `python pruebas/e2e/pruebas_interfaz.py --url <url> --log <log-servidor>` | 15/15 | [`docs/pruebas/resultados_interfaz.md`](docs/pruebas/resultados_interfaz.md), capturas en [`docs/evidencias/`](docs/evidencias/) |
+| Interfaz en navegador (16 casos: SweetAlert2, búsqueda en vivo, clave provisoria, matriz, tubo, arrastre de tarjetas y dashboards) | `python pruebas/e2e/pruebas_interfaz.py --url <url> --log <log-servidor>` | 16/16 | [`docs/pruebas/resultados_interfaz.md`](docs/pruebas/resultados_interfaz.md), capturas en [`docs/evidencias/`](docs/evidencias/) |
 | Estrés (Locust, carga progresiva) | ver [`docs/pruebas/plan_pruebas_estres.md`](docs/pruebas/plan_pruebas_estres.md) | Ensayo local ejecutado; **AWS pendiente** | [`docs/pruebas/estres/`](docs/pruebas/estres/) |
 
 Cada caso funcional registra requisito, módulo, precondiciones, pasos, resultado esperado y obtenido, estado, evidencia, responsable y fecha. Los defectos encontrados y su re-prueba están en el registro de defectos de `plan_pruebas_estres.md`. Las pruebas que dependen de AWS quedan como **pendientes justificadas**, no como aprobadas.
