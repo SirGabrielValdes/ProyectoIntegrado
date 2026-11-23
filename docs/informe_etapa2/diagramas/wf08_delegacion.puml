@@ -1,0 +1,26 @@
+@startuml
+scale 2
+title WF08 · Cambiar delegación activa (RF15 · EP02 · CU07)
+salt
+{+
+  {* [LOGO] SGR | [📍 DEL-00001 · Delegación Centro ▲] | Nombre usuario · Coordinador | [Salir] }
+  { . | {+
+      <b>Delegaciones autorizadas</b>
+      (X) DEL-00001 · Delegación Centro (activa)
+      () DEL-00002 · Delegación Norte
+      () DEL-00003 · Delegación Sur
+      .
+      [Cambiar delegación]
+    } | . }
+  .
+  {+
+    { <b>⚠ Cambios sin guardar</b> }
+    { Tiene un formulario con datos sin guardar. }
+    { Si cambia a DEL-00002 · Delegación Norte se perderán. }
+    { [Cancelar] | [Cambiar de todos modos] }
+  }
+  .
+  { <i>Tras el cambio, la cabecera, los menús y los listados muestran solo datos de la nueva delegación.</i> }
+  { <i>Un perfil de una sola delegación ve la delegación fija (🔒) sin selector.</i> }
+}
+@enduml

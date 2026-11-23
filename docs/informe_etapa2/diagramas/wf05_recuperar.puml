@@ -1,0 +1,38 @@
+@startuml
+scale 2
+title WF05 · Recuperar contraseña: solicitar código y nueva contraseña (RF04 · RF06 · EP01 · CU02)
+salt
+{
+  {+
+    { <b>1. Solicitar código</b> | 2. Validar código | 3. Nueva contraseña }
+    .
+    { <b>Recuperar contraseña</b> }
+    { Ingrese el correo asociado a su cuenta. }
+    .
+    Correo electrónico *
+    "nombre@laserena.cl              "
+    .
+    [         Enviar código         ]
+    { Volver al inicio de sesión }
+    .
+    { <i>Mensaje genérico: no indica si el correo existe</i> }
+  } | . | . |
+  {+
+    { 1. Solicitar código | 2. Validar código | <b>3. Nueva contraseña</b> }
+    .
+    { <b>Crear nueva contraseña</b> }
+    Nueva contraseña *
+    { "••••••••••            " | [👁] }
+    Confirmar contraseña *
+    { "••••••••••            " | [👁] }
+    .
+    { ✓ Entre 8 y 64 caracteres }
+    { ✓ Una mayúscula y una minúscula }
+    { ✓ Un número }
+    { ✗ Un carácter especial (! @ # $ % * ?) }
+    { ✗ Las contraseñas coinciden }
+    .
+    [      Guardar contraseña      ]
+  }
+}
+@enduml

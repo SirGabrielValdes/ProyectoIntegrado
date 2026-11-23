@@ -1,0 +1,21 @@
+@startuml
+scale 2
+title WF09 · Listado de atenciones (RF19 · RF13 · RF14 · EP04/EP05 · CU12 · CU13)
+salt
+{+
+  {* [LOGO] SGR | [📍 DEL-00001 · Delegación Centro (Fija)] | Nombre usuario · Funcionario | [Salir] }
+  { Gestión municipal / Atenciones }
+  { <b>Atenciones</b> | . | . | [Exportar a Excel] | [+ Ingresar atención] }
+  { "Buscar por vecino, RUT, tipo, descripción o responsable…" | ^Tipo: Todos^ | ^Filas: 10^ }
+  { <i>Búsqueda en vivo: los resultados se actualizan al escribir</i> }
+  { Mostrando 1 a 10 de 152 atenciones }
+  {#
+    <b>Folio</b> | <b>Fecha</b> | <b>Vecino</b> | <b>Tipo</b> | <b>Sub Atención</b> | <b>Responsable</b> | <b>Acciones</b>
+    AT-2026-000152 | 23/11/2026 10:42 | Nombre vecino 1 | Social | Ayuda social | Nombre usuario | Ver
+    AT-2026-000151 | 23/11/2026 09:15 | Nombre vecino 2 | Obras | Luminarias | Nombre usuario | Ver
+    AT-2026-000150 | 22/11/2026 16:30 | Nombre vecino 3 | Social | Orientación | Nombre usuario | Ver
+  }
+  { [Anterior] | [1] | [2] | [3] | … | [16] | [Siguiente] }
+  { <i>Exportar a Excel descarga solo los resultados del filtro aplicado, sin datos internos.</i> }
+}
+@enduml

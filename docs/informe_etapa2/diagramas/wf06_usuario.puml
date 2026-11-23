@@ -1,0 +1,31 @@
+@startuml
+scale 2
+title WF06 · Formulario de usuario (RF09 · EP02 · CU06.2)
+salt
+{+
+  {* [LOGO] SGR | [📍 DEL-00001 · Delegación Centro ▼] | Nombre usuario · Coordinador | [Salir] }
+  { Gestión municipal / Usuarios / Nuevo usuario }
+  { <b>Nuevo usuario</b> }
+  { Los campos con * son obligatorios. El código se genera automáticamente. }
+  .
+  {
+    Nombre completo * | . | Nombre de usuario *
+    "Nombre y apellidos        " | . | "nusuario                  "
+    Correo electrónico * | . | Rol *
+    "nombre@laserena.cl        " | . | ^Seleccione un rol…        ^
+    Cargo | . | .
+    ^Gestor social             ^ | . | .
+  }
+  .
+  Delegaciones autorizadas *
+  {
+    [X] DEL-00001 · Centro | [ ] DEL-00002 · Norte | [ ] DEL-00003 · Sur
+    [ ] DEL-00004 · Oriente | [ ] DEL-00005 · Rural | .
+  }
+  .
+  { [X] Activo }
+  .
+  { <i>Se enviará una contraseña provisoria al correo; deberá cambiarla al primer ingreso.</i> }
+  { . | . | [Cancelar] | [Guardar usuario] }
+}
+@enduml

@@ -1,0 +1,29 @@
+@startuml
+scale 2
+title WF07 · Roles y permisos (RF08 · RF16 · EP02 · CU05)
+salt
+{+
+  {* [LOGO] SGR | [📍 DEL-00001 · Delegación Centro ▼] | Nombre usuario · Superadministrador | [Salir] }
+  { Gestión municipal / Roles / Editar rol }
+  { <b>Editar rol · ROL-00003</b> }
+  {
+    Nombre del rol * | . | Alcance *
+    "Delegado municipal        " | . | ^Una delegación      ^
+  }
+  Descripción
+  { "Responsable de una delegación: supervisa su equipo y sus atenciones…" }
+  { [X] Activo }
+  .
+  { <b>Permisos por módulo</b> }
+  {#
+    <b>Módulo</b> | <b>Ver</b> | <b>Crear</b> | <b>Editar</b> | <b>Eliminar</b> | <b>Exportar</b> | <b>Aprobar</b>
+    Usuarios | ☑ | ☐ | ☐ | ☐ | ☑ | .
+    Atenciones | ☑ | ☑ | ☑ | ☐ | ☑ | .
+    Matriz de actividades | ☑ | ☑ | ☑ | ☐ | ☑ | ☑
+    Tubo de trabajo | ☑ | ☑ | ☑ | ☐ | ☑ | ☑
+    Dashboards | ☑ | . | . | . | ☑ | .
+  }
+  { <i>El Superadministrador es un rol protegido: no se elimina ni pierde permisos.</i> }
+  { . | . | [Cancelar] | [Guardar rol] }
+}
+@enduml
